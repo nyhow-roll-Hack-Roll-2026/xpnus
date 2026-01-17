@@ -73,7 +73,7 @@ export const StatsDashboard: React.FC<Props> = ({
     return (
         <div
             ref={scrollRef}
-            className={`bg-black/80 backdrop-blur-xl border border-white/10 h-full flex flex-col rounded-lg shadow-2xl overflow-y-auto no-scrollbar relative pointer-events-auto ${isReadOnly ? 'border-mc-gold/50' : ''}`}
+            className={`bg-black/80 backdrop-blur-xl border border-white/10 h-full flex flex-col rounded-lg shadow-2xl overflow-y-auto overflow-x-hidden no-scrollbar relative pointer-events-auto ${isReadOnly ? 'border-mc-gold/50' : ''}`}
         >
             {/* TRACING BEAM WRAPPER for scroll tracking within the sidebar */}
             {isScrollReady && (

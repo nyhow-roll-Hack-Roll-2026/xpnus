@@ -275,7 +275,7 @@ export const ShareModal: React.FC<Props> = ({ achievement, onClose, achievedAt }
   };
 
   const content = (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/80 p-4" style={{ zIndex: 2147483647 }}>
+    <div className="fixed inset-0 flex items-center justify-center bg-black/80 p-4 animate-in fade-in duration-300" style={{ zIndex: 2147483647 }}>
       <div className="relative w-full max-w-3xl bg-neutral-900 border-2 rounded-lg overflow-hidden p-0 max-h-[90vh] flex flex-col">
          <div className="flex justify-between items-center p-4 border-b">
             <h3 className="text-xl font-bold text-white">Share Achievement</h3>

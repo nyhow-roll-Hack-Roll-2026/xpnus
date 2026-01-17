@@ -26,7 +26,7 @@ export const ResourcesModal: React.FC<Props> = ({ unlockedIds, onClose }) => {
     .sort(() => Math.random() - 0.5); // Shuffle for "feed" look
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="relative w-full max-w-2xl bg-neutral-900 border-2 border-mc-gold shadow-[0_0_50px_rgba(212,175,55,0.2)] rounded-lg overflow-hidden flex flex-col max-h-[85vh]">
             
             {/* Header */}

@@ -81,7 +81,7 @@ export const PendingInvitesModal: React.FC<Props> = ({ username, onClose, onAcce
     };
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-300">
             <div className="relative w-full max-w-lg bg-neutral-900 border-2 border-mc-gold shadow-[0_0_40px_rgba(212,175,55,0.3)] rounded-lg overflow-hidden flex flex-col max-h-[80vh]">
                 
                 {/* Header */}

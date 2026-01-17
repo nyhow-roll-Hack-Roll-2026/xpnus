@@ -203,7 +203,7 @@ export const AchievementModal: React.FC<Props> = ({ achievement, onClose, status
   );
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200 ${showShare ? 'pointer-events-none' : ''}`} style={showShare ? { opacity: 0.18, filter: 'blur(2px)'} : undefined}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300 ${showShare ? 'pointer-events-none' : ''}`} style={showShare ? { opacity: 0.18, filter: 'blur(2px)'} : undefined}>
 
       <div className={`relative w-full max-w-lg bg-neutral-900 border-2 shadow-[0_0_40px_rgba(0,0,0,0.5)] rounded-lg overflow-hidden flex flex-col max-h-[90vh] ${isLocked ? 'border-gray-700' : 'border-mc-gold shadow-[0_0_40px_rgba(212,175,55,0.3)]'}`}>
             

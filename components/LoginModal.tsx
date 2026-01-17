@@ -213,7 +213,7 @@ export const LoginModal: React.FC<Props> = ({ onLogin }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 bg-grid-pattern overflow-y-auto my-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 bg-grid-pattern overflow-y-auto my-6 animate-in fade-in duration-300">
             <style>{`
         @keyframes shake {
             0%, 100% { transform: translateX(0); }

@@ -656,7 +656,38 @@ const App: React.FC = () => {
                     />
                 </aside>
 
-
+                {/* Mobile Sidebar Overlay */}
+                {showMobileStats && (
+                    <div className="fixed inset-0 z-[100] lg:hidden flex">
+                        {/* Backdrop */}
+                        <div 
+                            className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+                            onClick={() => setShowMobileStats(false)}
+                        ></div>
+                        
+                        {/* Sidebar */}
+                        <aside className="relative w-80 h-full bg-neutral-900 border-r border-mc-gold/50 shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
+                            <div className="p-4 border-b border-white/10 flex justify-end">
+                                <button 
+                                    onClick={() => setShowMobileStats(false)}
+                                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded"
+                                >
+                                    <X size={24} />
+                                </button>
+                            </div>
+                            <div className="flex-1 min-h-0 p-4 pt-0">
+                                <StatsDashboard
+                                    progress={displayProgress}
+                                    user={displayUser}
+                                    onLogout={handleLogout}
+                                    onUpdateBio={handleBioUpdate}
+                                    isReadOnly={isReadOnly}
+                                    onBack={handleReturnToMyProfile}
+                                />
+                            </div>
+                        </aside>
+                    </div>
+                )}
 
 
                 {/* Map Wrapper with Filters */}

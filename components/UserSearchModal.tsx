@@ -39,7 +39,7 @@ export const UserSearchModal: React.FC<Props> = ({ onClose, onSelectUser, curren
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       
       <div className="relative w-full max-w-2xl bg-[#262626] border-2 border-gray-500 shadow-2xl rounded-sm overflow-hidden flex flex-col h-[70vh]">
             
