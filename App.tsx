@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Menu, X, Compass, Plus, Minus, Package, Search, List, Mail, Users } from 'lucide-react'; 
+import { Menu, X, Compass, Plus, Minus, Package, Search, List, Mail, Users } from 'lucide-react';
 import { ACHIEVEMENTS, TROPHIES, CATEGORY_COLORS, TIPS } from './constants';
 import { AchievementIcon } from './components/AchievementIcon';
 import { AchievementModal } from './components/AchievementModal';
@@ -27,20 +27,20 @@ const App: React.FC = () => {
     const [user, setUser] = useState<User | null>(null);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // --- Game State ---
-  const [progress, setProgress] = useState<UserProgress>({ unlockedIds: ['nus_start'], unlockedTrophies: [], totalXp: 0, proofs: {}, coopPartners: {} });
-  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
-  const [tip, setTip] = useState<string>(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
-  const [filterCategory, setFilterCategory] = useState<Category | 'ALL'>('ALL');
-  const [showMobileStats, setShowMobileStats] = useState(false);
-  const [showInventory, setShowInventory] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
-  const [showAchievementList, setShowAchievementList] = useState(false);
-  
-  // --- Co-op State ---
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showPendingInvites, setShowPendingInvites] = useState(false);
-  const [pendingInviteCount, setPendingInviteCount] = useState(0);
+    // --- Game State ---
+    const [progress, setProgress] = useState<UserProgress>({ unlockedIds: ['nus_start'], unlockedTrophies: [], totalXp: 0, proofs: {}, coopPartners: {} });
+    const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
+    const [tip, setTip] = useState<string>(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
+    const [filterCategory, setFilterCategory] = useState<Category | 'ALL'>('ALL');
+    const [showMobileStats, setShowMobileStats] = useState(false);
+    const [showInventory, setShowInventory] = useState(false);
+    const [showSearch, setShowSearch] = useState(false);
+    const [showAchievementList, setShowAchievementList] = useState(false);
+
+    // --- Co-op State ---
+    const [showInviteModal, setShowInviteModal] = useState(false);
+    const [showPendingInvites, setShowPendingInvites] = useState(false);
+    const [pendingInviteCount, setPendingInviteCount] = useState(0);
 
     // --- Achievement Search State ---
     const [achievementSearchQuery, setAchievementSearchQuery] = useState('');
@@ -137,69 +137,69 @@ const App: React.FC = () => {
         }
     }, []);
 
-  // 2. Load Data when User is set
-  const handlePostLogin = async (loggedUser: User) => {
-      setUser(loggedUser);
-      setIsAuthLoading(true);
-      try {
-          const savedData = await loadUserProgress(loggedUser.username);
-          if (savedData) {
-              // Ensure unlockedTrophies & proofs exists (migration support)
-              setProgress({ 
-                  ...savedData, 
-                  unlockedTrophies: savedData.unlockedTrophies || [],
-                  proofs: savedData.proofs || {},
-                  coopPartners: savedData.coopPartners || {}
-              });
-          } else {
-              // New save for this user
-              setProgress({ unlockedIds: ['nus_start'], unlockedTrophies: [], totalXp: 0, proofs: {}, coopPartners: {} });
-          }
-          
-          // Check for pending invites
-          checkPendingInvites(loggedUser.username);
-      } catch (e) {
-          console.error("Failed to load progress", e);
-      } finally {
-          setIsAuthLoading(false);
-      }
-  };
-  
-  // Check for pending co-op invites
-  const checkPendingInvites = async (username: string) => {
-      try {
-          const invites = await getPendingInvitesForUser(username);
-          setPendingInviteCount(invites.length);
-      } catch (e) {
-          console.error("Failed to check invites", e);
-      }
-  };
-  
-  // Periodic check for new invites (every 30 seconds)
-  useEffect(() => {
-      if (!user) return;
-      
-      const interval = setInterval(() => {
-          checkPendingInvites(user.username);
-      }, 30000);
-      
-      return () => clearInterval(interval);
-  }, [user]);
+    // 2. Load Data when User is set
+    const handlePostLogin = async (loggedUser: User) => {
+        setUser(loggedUser);
+        setIsAuthLoading(true);
+        try {
+            const savedData = await loadUserProgress(loggedUser.username);
+            if (savedData) {
+                // Ensure unlockedTrophies & proofs exists (migration support)
+                setProgress({
+                    ...savedData,
+                    unlockedTrophies: savedData.unlockedTrophies || [],
+                    proofs: savedData.proofs || {},
+                    coopPartners: savedData.coopPartners || {}
+                });
+            } else {
+                // New save for this user
+                setProgress({ unlockedIds: ['nus_start'], unlockedTrophies: [], totalXp: 0, proofs: {}, coopPartners: {} });
+            }
+
+            // Check for pending invites
+            checkPendingInvites(loggedUser.username);
+        } catch (e) {
+            console.error("Failed to load progress", e);
+        } finally {
+            setIsAuthLoading(false);
+        }
+    };
+
+    // Check for pending co-op invites
+    const checkPendingInvites = async (username: string) => {
+        try {
+            const invites = await getPendingInvitesForUser(username);
+            setPendingInviteCount(invites.length);
+        } catch (e) {
+            console.error("Failed to check invites", e);
+        }
+    };
+
+    // Periodic check for new invites (every 30 seconds)
+    useEffect(() => {
+        if (!user) return;
+
+        const interval = setInterval(() => {
+            checkPendingInvites(user.username);
+        }, 30000);
+
+        return () => clearInterval(interval);
+    }, [user]);
 
     const handleLogin = async (username: string, avatarUrl: string, isCustomAvatar: boolean) => {
         const loggedUser = await loginUser(username, avatarUrl, isCustomAvatar);
         await handlePostLogin(loggedUser);
     };
 
-  const handleLogout = () => {
-      logoutUser();
-      setUser(null);
-      setProgress({ unlockedIds: ['nus_start'], unlockedTrophies: [], totalXp: 0, proofs: {}, coopPartners: {} });
-      setViewingProfile(null);
-      setShowMobileStats(false);
-      setHasCenteredOnce(false);
-      setPendingInviteCount(0);
-  };
+    const handleLogout = () => {
+        logoutUser();
+        setUser(null);
+        setProgress({ unlockedIds: ['nus_start'], unlockedTrophies: [], totalXp: 0, proofs: {}, coopPartners: {} });
+        setViewingProfile(null);
+        setShowMobileStats(false);
+        setHasCenteredOnce(false);
+        setPendingInviteCount(0);
+    };
 
     const handleBioUpdate = async (newBio: string) => {
         if (!user) return;
@@ -316,59 +316,59 @@ const App: React.FC = () => {
         }
     };
 
-  const handleUpdateProof = async (id: string, proof: AchievementProof) => {
-    if (isReadOnly) return;
-    
-    let newProgress = {
-        ...progress,
-        proofs: { ...progress.proofs, [id]: proof }
+    const handleUpdateProof = async (id: string, proof: AchievementProof) => {
+        if (isReadOnly) return;
+
+        let newProgress = {
+            ...progress,
+            proofs: { ...progress.proofs, [id]: proof }
+        };
+        setProgress(newProgress);
+        if (user) {
+            await saveUserProgress(user.username, newProgress);
+        }
     };
-    setProgress(newProgress);
-    if (user) {
+
+    // Handle accepting a co-op invite
+    const handleAcceptCoopInvite = async (invite: CoopInvite, achievement: Achievement) => {
+        if (!user) return;
+
+        // Unlock the achievement for the accepting user
+        let newProgress = {
+            ...progress,
+            unlockedIds: [...progress.unlockedIds, invite.achievementId],
+            totalXp: progress.totalXp + achievement.xp,
+            proofs: invite.proof ? { ...progress.proofs, [invite.achievementId]: invite.proof } : progress.proofs,
+            coopPartners: { ...(progress.coopPartners || {}), [invite.achievementId]: invite.fromUsername }
+        };
+
+        // Check for Trophies
+        const newlyUnlockedTrophies = checkForTrophies(newProgress);
+        if (newlyUnlockedTrophies.length > 0) {
+            newProgress.unlockedTrophies = [...newProgress.unlockedTrophies, ...newlyUnlockedTrophies];
+            const trophyNames = newlyUnlockedTrophies.map(tid => TROPHIES.find(t => t.id === tid)?.title).join(", ");
+            alert(`🏆 TROPHY UNLOCKED: ${trophyNames}! Check your profile.`);
+        }
+
+        setProgress(newProgress);
+
+        // Auto-Save to DB
         await saveUserProgress(user.username, newProgress);
-    }
-  };
-  
-  // Handle accepting a co-op invite
-  const handleAcceptCoopInvite = async (invite: CoopInvite, achievement: Achievement) => {
-    if (!user) return;
-    
-    // Unlock the achievement for the accepting user
-    let newProgress = {
-        ...progress,
-        unlockedIds: [...progress.unlockedIds, invite.achievementId],
-        totalXp: progress.totalXp + achievement.xp,
-        proofs: invite.proof ? { ...progress.proofs, [invite.achievementId]: invite.proof } : progress.proofs,
-        coopPartners: { ...(progress.coopPartners || {}), [invite.achievementId]: invite.fromUsername }
+
+        // Update pending invite count
+        setPendingInviteCount(prev => Math.max(0, prev - 1));
+
+        alert(`🎮 Co-op achievement "${achievement.title}" unlocked with ${invite.fromUsername}!`);
+        setShowPendingInvites(false);
     };
 
-    // Check for Trophies
-    const newlyUnlockedTrophies = checkForTrophies(newProgress);
-    if (newlyUnlockedTrophies.length > 0) {
-        newProgress.unlockedTrophies = [...newProgress.unlockedTrophies, ...newlyUnlockedTrophies];
-        const trophyNames = newlyUnlockedTrophies.map(tid => TROPHIES.find(t => t.id === tid)?.title).join(", ");
-        alert(`🏆 TROPHY UNLOCKED: ${trophyNames}! Check your profile.`);
-    }
-
-    setProgress(newProgress);
-    
-    // Auto-Save to DB
-    await saveUserProgress(user.username, newProgress);
-    
-    // Update pending invite count
-    setPendingInviteCount(prev => Math.max(0, prev - 1));
-    
-    alert(`🎮 Co-op achievement "${achievement.title}" unlocked with ${invite.fromUsername}!`);
-    setShowPendingInvites(false);
-  };
-  
-  // Handle when user sends an invite
-  const handleInviteSent = (invite: CoopInvite) => {
-    // The sender also needs to unlock when the invite is accepted
-    // For now, we just close the modal - the unlock happens when the other person accepts
-    setShowInviteModal(false);
-    setSelectedAchievement(null);
-  };
+    // Handle when user sends an invite
+    const handleInviteSent = (invite: CoopInvite) => {
+        // The sender also needs to unlock when the invite is accepted
+        // For now, we just close the modal - the unlock happens when the other person accepts
+        setShowInviteModal(false);
+        setSelectedAchievement(null);
+    };
 
     // --- HORIZONTAL TREE LAYOUT ALGORITHM ---
     const { nodes, edges, startNodePos } = useMemo(() => {
@@ -591,54 +591,54 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0a0a0a_100%)] pointer-events-none"></div>
             </div>
 
-      {/* Header */}
-      <header className="relative z-50 bg-black/60 backdrop-blur-md border-b border-mc-gold/30 p-4 flex justify-between items-center shadow-lg">
-        <div className="flex items-center gap-4">
-            <button 
-                onClick={() => setShowMobileStats(!showMobileStats)} 
-                className="lg:hidden text-mc-gold hover:text-white transition-colors"
-            >
-                {showMobileStats ? <X size={28} /> : <Menu size={28} />}
-            </button>
-            
-            <div>
-                <h1 className="text-2xl md:text-4xl text-white drop-shadow-md tracking-wider flex items-center gap-2">
-                    <span className="text-mc-gold">❖</span> NUS ACHIEVEMENTS
-                </h1>
-                <p className="text-gray-400 text-sm md:text-lg mt-1 hidden md:flex items-center gap-2">
-                    <span className="text-mc-green animate-pulse">●</span> {tip}
-                </p>
-            </div>
-        </div>
-        <div className="flex gap-4">
-             <div className="text-right hidden md:block">
-                 <p className="text-xs text-mc-goldDim uppercase tracking-widest">Current Session</p>
-                 <p className="text-xl text-gray-200">Year 1, Sem 1</p>
-             </div>
-             
-             <MinecraftButton onClick={() => setShowSearch(true)} className="flex items-center gap-2" variant="default">
-                <Search size={20} />
-             </MinecraftButton>
+            {/* Header */}
+            <header className="relative z-50 bg-black/60 backdrop-blur-md border-b border-mc-gold/30 p-4 flex justify-between items-center shadow-lg">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => setShowMobileStats(!showMobileStats)}
+                        className="lg:hidden text-mc-gold hover:text-white transition-colors"
+                    >
+                        {showMobileStats ? <X size={28} /> : <Menu size={28} />}
+                    </button>
 
-             {/* Co-op Invites Mail Button */}
-             <button 
-                 onClick={() => setShowPendingInvites(true)} 
-                 className="relative h-20 px-3 flex items-center justify-center bg-purple-900/60 border-2 border-purple-500/50 rounded hover:bg-purple-600/40 hover:border-purple-400 transition-all"
-             >
-                <Mail size={20} className="text-purple-300" />
-                {pendingInviteCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
-                        {pendingInviteCount}
-                    </span>
-                )}
-             </button>
+                    <div>
+                        <h1 className="text-2xl md:text-4xl text-white drop-shadow-md tracking-wider flex items-center gap-2">
+                            <span className="text-mc-gold">❖</span> NUS ACHIEVEMENTS
+                        </h1>
+                        <p className="text-gray-400 text-sm md:text-lg mt-1 hidden md:flex items-center gap-2">
+                            <span className="text-mc-green animate-pulse">●</span> {tip}
+                        </p>
+                    </div>
+                </div>
+                <div className="flex gap-4">
+                    <div className="text-right hidden md:block">
+                        <p className="text-xs text-mc-goldDim uppercase tracking-widest">Current Session</p>
+                        <p className="text-xl text-gray-200">Year {user?.year}, Sem 1</p>
+                    </div>
 
-             <MinecraftButton onClick={() => setShowInventory(true)} className="hidden sm:flex items-center gap-2 h-20" variant="green">
-                <Package size={20} />
-                INVENTORY
-             </MinecraftButton>
-        </div>
-      </header>
+                    <MinecraftButton onClick={() => setShowSearch(true)} className="flex items-center gap-2" variant="default">
+                        <Search size={20} />
+                    </MinecraftButton>
+
+                    {/* Co-op Invites Mail Button */}
+                    <button
+                        onClick={() => setShowPendingInvites(true)}
+                        className="relative h-20 px-3 flex items-center justify-center bg-purple-900/60 border-2 border-purple-500/50 rounded hover:bg-purple-600/40 hover:border-purple-400 transition-all"
+                    >
+                        <Mail size={20} className="text-purple-300" />
+                        {pendingInviteCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
+                                {pendingInviteCount}
+                            </span>
+                        )}
+                    </button>
+
+                    <MinecraftButton onClick={() => setShowInventory(true)} className="hidden sm:flex items-center gap-2 h-20" variant="green">
+                        <Package size={20} />
+                        INVENTORY
+                    </MinecraftButton>
+                </div>
+            </header>
 
             {/* Main Content Area */}
             <div className="flex-1 flex overflow-hidden relative z-10">
@@ -658,342 +658,342 @@ const App: React.FC = () => {
 
 
 
-                        {/* Map Wrapper with Filters */}
-                        <div className="relative flex-1 flex flex-col h-full overflow-hidden">
+                {/* Map Wrapper with Filters */}
+                <div className="relative flex-1 flex flex-col h-full overflow-hidden">
 
-                            {/* Filter Overlay */}
-                            <div className="absolute top-4 left-0 w-full px-4 z-30 pointer-events-auto overflow-x-auto no-scrollbar">
-                                <div className="flex gap-2 min-w-max pb-2">
-                                    <MinecraftButton
-                                        variant={filterCategory === 'ALL' ? 'green' : 'default'}
-                                        onClick={() => setFilterCategory('ALL')}
-                                        className="text-xs sm:text-sm px-3 py-1"
-                                    >
-                                        ALL
-                                    </MinecraftButton>
-                                    {Object.values(Category).map(cat => (
-                                        <MinecraftButton
-                                            key={cat}
-                                            variant={filterCategory === cat ? 'green' : 'default'}
-                                            onClick={() => setFilterCategory(cat)}
-                                            className="text-xs sm:text-sm px-3 py-1"
-                                        >
-                                            {cat.toUpperCase()}
-                                        </MinecraftButton>
-                                    ))}
+                    {/* Filter Overlay */}
+                    <div className="absolute top-4 left-0 w-full px-4 z-30 pointer-events-auto overflow-x-auto no-scrollbar">
+                        <div className="flex gap-2 min-w-max pb-2">
+                            <MinecraftButton
+                                variant={filterCategory === 'ALL' ? 'green' : 'default'}
+                                onClick={() => setFilterCategory('ALL')}
+                                className="text-xs sm:text-sm px-3 py-1"
+                            >
+                                ALL
+                            </MinecraftButton>
+                            {Object.values(Category).map(cat => (
+                                <MinecraftButton
+                                    key={cat}
+                                    variant={filterCategory === cat ? 'green' : 'default'}
+                                    onClick={() => setFilterCategory(cat)}
+                                    className="text-xs sm:text-sm px-3 py-1"
+                                >
+                                    {cat.toUpperCase()}
+                                </MinecraftButton>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Achievement Search Overlay (Expandable) */}
+                    <div className="absolute top-4 right-4 z-30 pointer-events-auto">
+                        <div className="relative group">
+                            <div className={`flex items-center bg-black/80 border-2 rounded-sm p-1 shadow-lg backdrop-blur-sm transition-all duration-300 ${achievementSearchQuery ? 'border-mc-gold w-64' : 'border-white/20 w-10 hover:w-64 focus-within:w-64 overflow-hidden'}`}>
+                                <div className="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400">
+                                    <Search size={18} />
                                 </div>
+                                <input
+                                    type="text"
+                                    placeholder="Find achievement..."
+                                    className="bg-transparent border-none text-white text-sm font-pixel focus:outline-none w-full placeholder-gray-500 ml-1"
+                                    value={achievementSearchQuery}
+                                    onChange={(e) => setAchievementSearchQuery(e.target.value)}
+                                />
+                                {achievementSearchQuery && (
+                                    <button onClick={() => setAchievementSearchQuery('')} className="shrink-0 text-gray-500 hover:text-white px-2">
+                                        <X size={14} />
+                                    </button>
+                                )}
                             </div>
 
-                            {/* Achievement Search Overlay (Expandable) */}
-                            <div className="absolute top-4 right-4 z-30 pointer-events-auto">
-                                <div className="relative group">
-                                    <div className={`flex items-center bg-black/80 border-2 rounded-sm p-1 shadow-lg backdrop-blur-sm transition-all duration-300 ${achievementSearchQuery ? 'border-mc-gold w-64' : 'border-white/20 w-10 hover:w-64 focus-within:w-64 overflow-hidden'}`}>
-                                        <div className="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400">
-                                            <Search size={18} />
-                                        </div>
-                                        <input
-                                            type="text"
-                                            placeholder="Find achievement..."
-                                            className="bg-transparent border-none text-white text-sm font-pixel focus:outline-none w-full placeholder-gray-500 ml-1"
-                                            value={achievementSearchQuery}
-                                            onChange={(e) => setAchievementSearchQuery(e.target.value)}
-                                        />
-                                        {achievementSearchQuery && (
-                                            <button onClick={() => setAchievementSearchQuery('')} className="shrink-0 text-gray-500 hover:text-white px-2">
-                                                <X size={14} />
+                            {/* Results Dropdown */}
+                            {achievementSearchQuery && (
+                                <div className="absolute top-full right-0 mt-2 w-64 bg-neutral-900 border-2 border-mc-gold/50 shadow-2xl rounded-sm max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                                    {searchResults.length === 0 ? (
+                                        <div className="p-4 text-gray-500 text-xs text-center italic">No quests found.</div>
+                                    ) : (
+                                        searchResults.map(ach => (
+                                            <button
+                                                key={ach.id}
+                                                onClick={() => handleCenterOnNode(ach.id)}
+                                                className="w-full text-left p-3 hover:bg-white/10 border-b border-white/5 last:border-0 flex items-center gap-3 transition-colors group/item"
+                                            >
+                                                <div className={`p-1.5 rounded-sm bg-black border border-white/20 group-hover/item:border-mc-gold/50`}>
+                                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[ach.category] }}></div>
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-white text-sm font-bold truncate group-hover/item:text-mc-gold transition-colors">{ach.title}</p>
+                                                    <p className="text-[10px] text-gray-400 truncate uppercase tracking-wider">{ach.category}</p>
+                                                </div>
                                             </button>
-                                        )}
-                                    </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
-                                    {/* Results Dropdown */}
-                                    {achievementSearchQuery && (
-                                        <div className="absolute top-full right-0 mt-2 w-64 bg-neutral-900 border-2 border-mc-gold/50 shadow-2xl rounded-sm max-h-60 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
-                                            {searchResults.length === 0 ? (
-                                                <div className="p-4 text-gray-500 text-xs text-center italic">No quests found.</div>
-                                            ) : (
-                                                searchResults.map(ach => (
-                                                    <button
-                                                        key={ach.id}
-                                                        onClick={() => handleCenterOnNode(ach.id)}
-                                                        className="w-full text-left p-3 hover:bg-white/10 border-b border-white/5 last:border-0 flex items-center gap-3 transition-colors group/item"
-                                                    >
-                                                        <div className={`p-1.5 rounded-sm bg-black border border-white/20 group-hover/item:border-mc-gold/50`}>
-                                                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[ach.category] }}></div>
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-white text-sm font-bold truncate group-hover/item:text-mc-gold transition-colors">{ach.title}</p>
-                                                            <p className="text-[10px] text-gray-400 truncate uppercase tracking-wider">{ach.category}</p>
-                                                        </div>
-                                                    </button>
-                                                ))
-                                            )}
+                    {/* Hover Proof Tooltip - Absolute positioned based on mouse */}
+                    {hoveredProof && (
+                        <div
+                            className="fixed z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
+                            style={{ left: hoveredProof.x + 20, top: hoveredProof.y + 20 }}
+                        >
+                            <div className="bg-black/90 border-2 border-white p-1 rounded-sm shadow-[5px_5px_0px_rgba(0,0,0,0.5)] w-48">
+                                {/* Header */}
+                                <div className="bg-[#5D8D42] text-white text-[10px] font-bold px-2 py-1 mb-1 tracking-widest uppercase truncate border-b border-green-800">
+                                    {hoveredProof.title}
+                                </div>
+
+                                {/* Content */}
+                                <div className="p-1 space-y-1">
+                                    {hoveredProof.proof.media && hoveredProof.proof.mediaType === 'IMAGE' && (
+                                        <img src={hoveredProof.proof.media} alt="Memory" className="w-full h-24 object-cover rounded border border-white/20" />
+                                    )}
+                                    {hoveredProof.proof.media && hoveredProof.proof.mediaType === 'VIDEO' && (
+                                        <video
+                                            src={hoveredProof.proof.media}
+                                            autoPlay muted loop
+                                            className="w-full h-24 object-cover rounded border border-white/20"
+                                        />
+                                    )}
+                                    {hoveredProof.proof.text && (
+                                        <div className="p-1 text-white italic text-[10px] font-serif leading-tight bg-white/5 rounded">
+                                            "{hoveredProof.proof.text}"
                                         </div>
                                     )}
                                 </div>
+
+                                {/* Footer Timestamp */}
+                                <div className="mt-1 text-[8px] text-gray-400 text-right pr-1">
+                                    {new Date(hoveredProof.proof.timestamp).toLocaleDateString()}
+                                </div>
                             </div>
+                        </div>
+                    )}
 
-                            {/* Hover Proof Tooltip - Absolute positioned based on mouse */}
-                            {hoveredProof && (
-                                <div
-                                    className="fixed z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
-                                    style={{ left: hoveredProof.x + 20, top: hoveredProof.y + 20 }}
-                                >
-                                    <div className="bg-black/90 border-2 border-white p-1 rounded-sm shadow-[5px_5px_0px_rgba(0,0,0,0.5)] w-48">
-                                        {/* Header */}
-                                        <div className="bg-[#5D8D42] text-white text-[10px] font-bold px-2 py-1 mb-1 tracking-widest uppercase truncate border-b border-green-800">
-                                            {hoveredProof.title}
-                                        </div>
+                    {/* Canvas (Tree Visualization) */}
+                    <main
+                        ref={mapContainerRef}
+                        className={`flex-1 w-full h-full relative overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} touch-none`}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={() => { handleMouseUp(); setHoveredProof(null); }}
+                        onTouchStart={handleTouchStart}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                    >
+                        <div
+                            className="absolute top-0 left-0 origin-top-left transition-transform duration-75 ease-out will-change-transform"
+                            style={{
+                                transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+                            }}
+                        >
+                            {/* 1. Connections Layer */}
+                            <svg
+                                className="absolute overflow-visible pointer-events-none"
+                                style={{ top: 0, left: 0, width: 1, height: 1 }}
+                            >
+                                {edges.map(edge => {
+                                    if (filterCategory !== 'ALL' && (edge.sourceCategory !== filterCategory || edge.targetCategory !== filterCategory)) {
+                                        return null;
+                                    }
+                                    const isSourceUnlocked = displayProgress.unlockedIds.includes(edge.sourceId);
+                                    const isTargetUnlocked = displayProgress.unlockedIds.includes(edge.targetId);
 
-                                        {/* Content */}
-                                        <div className="p-1 space-y-1">
-                                            {hoveredProof.proof.media && hoveredProof.proof.mediaType === 'IMAGE' && (
-                                                <img src={hoveredProof.proof.media} alt="Memory" className="w-full h-24 object-cover rounded border border-white/20" />
-                                            )}
-                                            {hoveredProof.proof.media && hoveredProof.proof.mediaType === 'VIDEO' && (
-                                                <video
-                                                    src={hoveredProof.proof.media}
-                                                    autoPlay muted loop
-                                                    className="w-full h-24 object-cover rounded border border-white/20"
-                                                />
-                                            )}
-                                            {hoveredProof.proof.text && (
-                                                <div className="p-1 text-white italic text-[10px] font-serif leading-tight bg-white/5 rounded">
-                                                    "{hoveredProof.proof.text}"
+                                    // Visual: Only light up Gold if BOTH ends are unlocked
+                                    const isPathActive = isSourceUnlocked && isTargetUnlocked;
+                                    const isPathVisible = isSourceUnlocked; // If source is unlocked, we see the path faintly
+
+                                    const ICON_OFFSET = 40;
+                                    const startX = edge.sourceX + 100 + 80;
+                                    const startY = edge.sourceY + ICON_OFFSET + 100;
+                                    const endX = edge.targetX + 100;
+                                    const endY = edge.targetY + ICON_OFFSET + 100;
+
+                                    // Orthogonal routing: horizontal → vertical → horizontal (L-shape)
+                                    const midX = (startX + endX) / 2;
+                                    const pathData = `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
+
+                                    return (
+                                        <path
+                                            key={edge.id}
+                                            d={pathData}
+                                            stroke={isPathActive ? "#D4AF37" : (isPathVisible ? "#404040" : "#222")}
+                                            strokeWidth={isPathActive ? "6" : "3"}
+                                            fill="none"
+                                            strokeDasharray={isPathActive ? "none" : "10,5"}
+                                            className={`transition-all duration-500 ${isPathActive ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] opacity-100' : (isPathVisible ? 'opacity-40' : 'opacity-10')}`}
+                                        />
+                                    );
+                                })}
+                            </svg>
+
+                            {/* 2. Nodes Layer */}
+                            {nodes.map(node => {
+                                if (filterCategory !== 'ALL' && node.category !== filterCategory) {
+                                    return null;
+                                }
+
+                                const isUnlocked = displayProgress.unlockedIds.includes(node.id);
+
+                                // Relaxed Logic: If unlocked, full opacity. If not, just dim.
+                                // We removed the parent dependency check for visibility so users can see "future" nodes easier in this city map
+                                let opacityClass = 'opacity-100';
+                                if (!isUnlocked) {
+                                    opacityClass = 'opacity-60 grayscale brightness-75';
+                                }
+
+                                return (
+                                    <div
+                                        key={node.id}
+                                        className="absolute group"
+                                        style={{
+                                            left: `${node.x + 100}px`,
+                                            top: `${node.y + 100}px`
+                                        }}
+                                    >
+                                        <div
+                                            className={`transition-all duration-200 cursor-pointer hover:scale-110 ${opacityClass}`}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedAchievement(node);
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                // Show Proof Tooltip if available
+                                                const proof = displayProgress.proofs?.[node.id];
+                                                if (proof) {
+                                                    setHoveredProof({
+                                                        x: e.clientX,
+                                                        y: e.clientY,
+                                                        proof,
+                                                        title: node.title
+                                                    });
+                                                }
+                                            }}
+                                            onMouseMove={(e) => {
+                                                if (hoveredProof) {
+                                                    setHoveredProof(prev => prev ? ({ ...prev, x: e.clientX, y: e.clientY }) : null);
+                                                }
+                                            }}
+                                            onMouseLeave={() => setHoveredProof(null)}
+                                        >
+                                            <AchievementIcon
+                                                iconName={node.iconName}
+                                                type={node.type}
+                                                category={node.category}
+                                                unlocked={isUnlocked}
+                                                size={32}
+                                            />
+                                            {/* Default title tooltip (hidden if proof is showing to avoid clutter, or kept for consistency) */}
+                                            {!hoveredProof && (
+                                                <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/90 backdrop-blur text-mc-gold px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 border border-mc-gold/50 font-pixel tracking-wide shadow-[0_0_10px_rgba(0,0,0,1)] flex items-center gap-2">
+                                                    {node.title}
+                                                    {node.type === AchievementType.COOP && (
+                                                        <span className="text-[9px] bg-purple-600 text-white px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                            <Users size={10} /> CO-OP
+                                                        </span>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* Footer Timestamp */}
-                                        <div className="mt-1 text-[8px] text-gray-400 text-right pr-1">
-                                            {new Date(hoveredProof.proof.timestamp).toLocaleDateString()}
-                                        </div>
                                     </div>
-                                </div>
-                            )}
-
-                            {/* Canvas (Tree Visualization) */}
-                            <main
-                                ref={mapContainerRef}
-                                className={`flex-1 w-full h-full relative overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} touch-none`}
-                                onMouseDown={handleMouseDown}
-                                onMouseMove={handleMouseMove}
-                                onMouseUp={handleMouseUp}
-                                onMouseLeave={() => { handleMouseUp(); setHoveredProof(null); }}
-                                onTouchStart={handleTouchStart}
-                                onTouchMove={handleTouchMove}
-                                onTouchEnd={handleTouchEnd}
-                            >
-                                <div
-                                    className="absolute top-0 left-0 origin-top-left transition-transform duration-75 ease-out will-change-transform"
-                                    style={{
-                                        transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
-                                    }}
-                                >
-                                    {/* 1. Connections Layer */}
-                                    <svg
-                                        className="absolute overflow-visible pointer-events-none"
-                                        style={{ top: 0, left: 0, width: 1, height: 1 }}
-                                    >
-                                        {edges.map(edge => {
-                                            if (filterCategory !== 'ALL' && (edge.sourceCategory !== filterCategory || edge.targetCategory !== filterCategory)) {
-                                                return null;
-                                            }
-                                            const isSourceUnlocked = displayProgress.unlockedIds.includes(edge.sourceId);
-                                            const isTargetUnlocked = displayProgress.unlockedIds.includes(edge.targetId);
-
-                                            // Visual: Only light up Gold if BOTH ends are unlocked
-                                            const isPathActive = isSourceUnlocked && isTargetUnlocked;
-                                            const isPathVisible = isSourceUnlocked; // If source is unlocked, we see the path faintly
-
-                                            const ICON_OFFSET = 40;
-                                            const startX = edge.sourceX + 100 + 80;
-                                            const startY = edge.sourceY + ICON_OFFSET + 100;
-                                            const endX = edge.targetX + 100;
-                                            const endY = edge.targetY + ICON_OFFSET + 100;
-
-                                            // Orthogonal routing: horizontal → vertical → horizontal (L-shape)
-                                            const midX = (startX + endX) / 2;
-                                            const pathData = `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
-
-                                            return (
-                                                <path
-                                                    key={edge.id}
-                                                    d={pathData}
-                                                    stroke={isPathActive ? "#D4AF37" : (isPathVisible ? "#404040" : "#222")}
-                                                    strokeWidth={isPathActive ? "6" : "3"}
-                                                    fill="none"
-                                                    strokeDasharray={isPathActive ? "none" : "10,5"}
-                                                    className={`transition-all duration-500 ${isPathActive ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] opacity-100' : (isPathVisible ? 'opacity-40' : 'opacity-10')}`}
-                                                />
-                                            );
-                                        })}
-                                    </svg>
-
-                                    {/* 2. Nodes Layer */}
-                                    {nodes.map(node => {
-                                        if (filterCategory !== 'ALL' && node.category !== filterCategory) {
-                                            return null;
-                                        }
-
-                                        const isUnlocked = displayProgress.unlockedIds.includes(node.id);
-
-                                        // Relaxed Logic: If unlocked, full opacity. If not, just dim.
-                                        // We removed the parent dependency check for visibility so users can see "future" nodes easier in this city map
-                                        let opacityClass = 'opacity-100';
-                                        if (!isUnlocked) {
-                                            opacityClass = 'opacity-60 grayscale brightness-75';
-                                        }
-
-                        return (
-                            <div 
-                                key={node.id} 
-                                className="absolute group"
-                                style={{ 
-                                    left: `${node.x + 100}px`, 
-                                    top: `${node.y + 100}px` 
-                                }}
-                            >
-                                <div 
-                                    className={`transition-all duration-200 cursor-pointer hover:scale-110 ${opacityClass}`}
-                                    onClick={(e) => {
-                                        e.stopPropagation(); 
-                                        setSelectedAchievement(node);
-                                    }}
-                                    onMouseEnter={(e) => {
-                                        // Show Proof Tooltip if available
-                                        const proof = displayProgress.proofs?.[node.id];
-                                        if (proof) {
-                                            setHoveredProof({
-                                                x: e.clientX,
-                                                y: e.clientY,
-                                                proof,
-                                                title: node.title
-                                            });
-                                        }
-                                    }}
-                                    onMouseMove={(e) => {
-                                        if (hoveredProof) {
-                                            setHoveredProof(prev => prev ? ({ ...prev, x: e.clientX, y: e.clientY }) : null);
-                                        }
-                                    }}
-                                    onMouseLeave={() => setHoveredProof(null)}
-                                >
-                                    <AchievementIcon 
-                                        iconName={node.iconName} 
-                                        type={node.type} 
-                                        category={node.category}
-                                        unlocked={isUnlocked} 
-                                        size={32}
-                                    />
-                                    {/* Default title tooltip (hidden if proof is showing to avoid clutter, or kept for consistency) */}
-                                    {!hoveredProof && (
-                                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/90 backdrop-blur text-mc-gold px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 border border-mc-gold/50 font-pixel tracking-wide shadow-[0_0_10px_rgba(0,0,0,1)] flex items-center gap-2">
-                                            {node.title}
-                                            {node.type === AchievementType.COOP && (
-                                                <span className="text-[9px] bg-purple-600 text-white px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                    <Users size={10} /> CO-OP
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                                {/* Controls */}
-                                <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-30 pointer-events-auto items-end">
-                                    <MinecraftButton onClick={handleRecenter} className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20 mb-4">
-                                        <Compass size={24} />
-                                    </MinecraftButton>
-                                    <div className="flex gap-2">
-                                        <MinecraftButton onClick={() => handleZoom('out')} className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20"><Minus size={20} /></MinecraftButton>
-                                        <MinecraftButton onClick={() => handleZoom('in')} className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20"><Plus size={20} /></MinecraftButton>
-                                    </div>
-                                </div>
-                            </main>
+                                );
+                            })}
                         </div>
 
-
-      {/* Modals */}
-      {selectedAchievement && (
-        <AchievementModal 
-            achievement={selectedAchievement} 
-            onClose={() => setSelectedAchievement(null)} 
-            status={
-                displayProgress.unlockedIds.includes(selectedAchievement.id) ? 'UNLOCKED' : 'READY'
-            }
-            onUnlock={handleUnlock}
-            onUpdateProof={handleUpdateProof}
-            parentTitle={selectedAchievement.parentId ? ACHIEVEMENTS.find(a => a.id === selectedAchievement.parentId)?.title : undefined}
-            existingProof={displayProgress.proofs?.[selectedAchievement.id]}
-            coopPartner={displayProgress.coopPartners?.[selectedAchievement.id]}
-            onOpenInviteModal={() => setShowInviteModal(true)}
-        />
-      )}
-
-      {/* Co-op Invite Modal */}
-      {showInviteModal && selectedAchievement && user && (
-          <InvitePartnerModal
-              achievement={selectedAchievement}
-              currentUser={user}
-              onClose={() => setShowInviteModal(false)}
-              onInviteSent={(invite) => {
-                  console.log('Invite sent:', invite);
-                  setShowInviteModal(false);
-              }}
-          />
-      )}
-
-      {/* Pending Invites Modal */}
-      {showPendingInvites && user && (
-          <PendingInvitesModal
-              username={user.username}
-              onClose={() => setShowPendingInvites(false)}
-              onAcceptInvite={async (invite, achievement) => {
-                  // Unlock achievement for both users
-                  const newProgress = {
-                      ...progress,
-                      unlockedIds: [...progress.unlockedIds, achievement.id],
-                      totalXp: progress.totalXp + achievement.xp,
-                      proofs: invite.proof ? { ...progress.proofs, [achievement.id]: invite.proof } : progress.proofs,
-                      coopPartners: { ...(progress.coopPartners || {}), [achievement.id]: invite.fromUsername }
-                  };
-                  setProgress(newProgress);
-                  if (user) {
-                      await saveUserProgress(user.username, newProgress);
-                  }
-                  alert(`🎉 Achievement "${achievement.title}" unlocked with ${invite.fromUsername}!`);
-                  checkPendingInvites(user.username);
-                  setShowPendingInvites(false);
-              }}
-          />
-      )}
-
-                    {showInventory && <ResourcesModal unlockedIds={displayProgress.unlockedIds} onClose={() => setShowInventory(false)} />}
-
-                    {showSearch && user && (
-                        <UserSearchModal
-                            currentUsername={user.username}
-                            onClose={() => setShowSearch(false)}
-                            onSelectUser={handleSelectUserToView}
-                        />
-                    )}
-
-            {
-                showAchievementList && (
-                    <AchievementListModal
-                        onClose={() => setShowAchievementList(false)}
-                        onSelectAchievement={(ach) => {
-                            setShowAchievementList(false);
-                            handleCenterOnNode(ach.id);
-                        }}
-                        progress={displayProgress}
-                    />
-                )
-            }
+                        {/* Controls */}
+                        <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-30 pointer-events-auto items-end">
+                            <MinecraftButton onClick={handleRecenter} className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20 mb-4">
+                                <Compass size={24} />
+                            </MinecraftButton>
+                            <div className="flex gap-2">
+                                <MinecraftButton onClick={() => handleZoom('out')} className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20"><Minus size={20} /></MinecraftButton>
+                                <MinecraftButton onClick={() => handleZoom('in')} className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20"><Plus size={20} /></MinecraftButton>
+                            </div>
+                        </div>
+                    </main>
                 </div>
+
+
+                {/* Modals */}
+                {selectedAchievement && (
+                    <AchievementModal
+                        achievement={selectedAchievement}
+                        onClose={() => setSelectedAchievement(null)}
+                        status={
+                            displayProgress.unlockedIds.includes(selectedAchievement.id) ? 'UNLOCKED' : 'READY'
+                        }
+                        onUnlock={handleUnlock}
+                        onUpdateProof={handleUpdateProof}
+                        parentTitle={selectedAchievement.parentId ? ACHIEVEMENTS.find(a => a.id === selectedAchievement.parentId)?.title : undefined}
+                        existingProof={displayProgress.proofs?.[selectedAchievement.id]}
+                        coopPartner={displayProgress.coopPartners?.[selectedAchievement.id]}
+                        onOpenInviteModal={() => setShowInviteModal(true)}
+                    />
+                )}
+
+                {/* Co-op Invite Modal */}
+                {showInviteModal && selectedAchievement && user && (
+                    <InvitePartnerModal
+                        achievement={selectedAchievement}
+                        currentUser={user}
+                        onClose={() => setShowInviteModal(false)}
+                        onInviteSent={(invite) => {
+                            console.log('Invite sent:', invite);
+                            setShowInviteModal(false);
+                        }}
+                    />
+                )}
+
+                {/* Pending Invites Modal */}
+                {showPendingInvites && user && (
+                    <PendingInvitesModal
+                        username={user.username}
+                        onClose={() => setShowPendingInvites(false)}
+                        onAcceptInvite={async (invite, achievement) => {
+                            // Unlock achievement for both users
+                            const newProgress = {
+                                ...progress,
+                                unlockedIds: [...progress.unlockedIds, achievement.id],
+                                totalXp: progress.totalXp + achievement.xp,
+                                proofs: invite.proof ? { ...progress.proofs, [achievement.id]: invite.proof } : progress.proofs,
+                                coopPartners: { ...(progress.coopPartners || {}), [achievement.id]: invite.fromUsername }
+                            };
+                            setProgress(newProgress);
+                            if (user) {
+                                await saveUserProgress(user.username, newProgress);
+                            }
+                            alert(`🎉 Achievement "${achievement.title}" unlocked with ${invite.fromUsername}!`);
+                            checkPendingInvites(user.username);
+                            setShowPendingInvites(false);
+                        }}
+                    />
+                )}
+
+                {showInventory && <ResourcesModal unlockedIds={displayProgress.unlockedIds} onClose={() => setShowInventory(false)} />}
+
+                {showSearch && user && (
+                    <UserSearchModal
+                        currentUsername={user.username}
+                        onClose={() => setShowSearch(false)}
+                        onSelectUser={handleSelectUserToView}
+                    />
+                )}
+
+                {
+                    showAchievementList && (
+                        <AchievementListModal
+                            onClose={() => setShowAchievementList(false)}
+                            onSelectAchievement={(ach) => {
+                                setShowAchievementList(false);
+                                handleCenterOnNode(ach.id);
+                            }}
+                            progress={displayProgress}
+                        />
+                    )
+                }
+            </div>
         </div >
     );
 };
