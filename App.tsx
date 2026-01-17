@@ -3,6 +3,7 @@ import { Menu, X, Compass, Plus, Minus, Package, Search, List } from 'lucide-rea
 import { ACHIEVEMENTS, TROPHIES, CATEGORY_COLORS, TIPS } from './constants';
 import { AchievementIcon } from './components/AchievementIcon';
 import { AchievementModal } from './components/AchievementModal';
+import { AchievementListModal } from './components/AchievementListModal';
 import { StatsDashboard } from './components/StatsDashboard';
 import { ResourcesModal } from './components/ResourcesModal';
 import { UserSearchModal } from './components/UserSearchModal';
@@ -32,7 +33,7 @@ const App: React.FC = () => {
   const [showInventory, setShowInventory] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showAchievementList, setShowAchievementList] = useState(false);
-  
+
   // --- Achievement Search State ---
   const [achievementSearchQuery, setAchievementSearchQuery] = useState('');
 
@@ -833,6 +834,17 @@ const App: React.FC = () => {
               currentUsername={user.username}
               onClose={() => setShowSearch(false)}
               onSelectUser={handleSelectUserToView}
+          />
+      )}
+
+      {showAchievementList && (
+          <AchievementListModal
+              onClose={() => setShowAchievementList(false)}
+              onSelectAchievement={(ach) => {
+                  setShowAchievementList(false);
+                  handleCenterOnNode(ach.id);
+              }}
+              progress={displayProgress}
           />
       )}
     </div>
