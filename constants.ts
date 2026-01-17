@@ -1,4 +1,4 @@
-import { Achievement, AchievementType, Category } from './types';
+import { Achievement, AchievementType, Category, Trophy } from './types';
 
 export const AVATARS = [
     "https://api.dicebear.com/9.x/pixel-art/png?seed=Steve",
@@ -28,6 +28,51 @@ export const TIPS = [
     "Tip: Printing requires credits. Farm them wisely."
 ];
 
+export const TROPHIES: Trophy[] = [
+    {
+        id: 'trophy_starter',
+        title: 'New Beginnings',
+        description: 'Unlock your first 3 achievements.',
+        iconName: 'Sprout',
+        color: '#A3E635', // Lime
+    },
+    {
+        id: 'trophy_67',
+        title: 'The 67th',
+        description: 'Prove your dedication by completing 67 tasks.',
+        iconName: 'Trophy',
+        color: '#D4AF37', // Gold
+    },
+    {
+        id: 'trophy_academic',
+        title: 'Grand Magus',
+        description: 'Unlock all Academic achievements.',
+        iconName: 'GraduationCap',
+        color: '#3b82f6', // Blue
+    },
+    {
+        id: 'trophy_explorer',
+        title: 'Cartographer',
+        description: 'Unlock all Exploration achievements.',
+        iconName: 'Map',
+        color: '#f59e0b', // Orange
+    },
+    {
+        id: 'trophy_social',
+        title: 'Town Mayor',
+        description: 'Unlock all Social achievements.',
+        iconName: 'Users',
+        color: '#8b5cf6', // Purple
+    },
+    {
+        id: 'trophy_completionist',
+        title: 'The End?',
+        description: 'Unlock 100% of all current achievements.',
+        iconName: 'Crown',
+        color: '#ef4444', // Red/Netherite
+    }
+];
+
 export const ACHIEVEMENTS: Achievement[] = [
   // --- ROOT ---
   {
@@ -39,7 +84,14 @@ export const ACHIEVEMENTS: Achievement[] = [
     type: AchievementType.ROOT,
     category: Category.GENERAL,
     globalCompletionRate: 100,
-    xp: 0
+    xp: 0,
+    resources: [
+        { label: 'NUSMods (Schedule Builder)', url: 'https://nusmods.com', type: 'LINK' },
+        { label: 'Campus Map PDF', url: 'https://map.nus.edu.sg/assets/campusmap/pdf/campus_map_full_version.pdf', type: 'PDF' }
+    ],
+    guestbook: [
+        { username: 'Admin', date: '2024-01-01', message: 'Welcome to the game.', avatarSeed: 'Admin' }
+    ]
   },
 
   // ==========================================
@@ -55,7 +107,15 @@ export const ACHIEVEMENTS: Achievement[] = [
     type: AchievementType.TASK,
     category: Category.ACADEMIC,
     globalCompletionRate: 95,
-    xp: 10
+    xp: 10,
+    resources: [
+        { label: 'LumiNUS Portal', url: 'https://luminus.nus.edu.sg', type: 'LINK' },
+        { label: 'Productivity Hacks Wiki', url: '#', type: 'LINK' }
+    ],
+    guestbook: [
+        { username: 'StudyGirl99', date: '2d ago', message: 'CS1101S is pain.', avatarSeed: 'Alice' },
+        { username: 'Mark_Z', date: '5d ago', message: 'Where is LT17??', avatarSeed: 'Bob' }
+    ]
   },
     // Sub-branch: Grinding/Studying
     {
@@ -68,7 +128,14 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.GOAL,
         category: Category.ACADEMIC,
         globalCompletionRate: 15,
-        xp: 50
+        xp: 50,
+        resources: [
+            { label: 'Library Crowd Level Bot', url: '#', type: 'TELEGRAM' },
+            { label: 'Lo-Fi Study Playlist', url: '#', type: 'LINK' }
+        ],
+        guestbook: [
+            { username: 'BookWorm', date: '1d ago', message: 'Level 6 is freezing.', avatarSeed: 'Cathy' }
+        ]
     },
     {
         id: 'all_nighter',
@@ -80,7 +147,10 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.CHALLENGE,
         category: Category.ACADEMIC,
         globalCompletionRate: 8,
-        xp: 80
+        xp: 80,
+        guestbook: [
+            { username: 'ZombieMode', date: '3d ago', message: 'The sunrise at UTown is worth it.', avatarSeed: 'Dave' }
+        ]
     },
     // Sub-branch: Exams/Results
     {
@@ -93,7 +163,11 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.TASK,
         category: Category.ACADEMIC,
         globalCompletionRate: 90,
-        xp: 20
+        xp: 20,
+        resources: [
+            { label: 'Past Year Papers Repo', url: '#', type: 'LINK' },
+            { label: 'Exam Venue Map', url: '#', type: 'PDF' }
+        ]
     },
     {
         id: 'deans_list',
@@ -105,7 +179,15 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.CHALLENGE,
         category: Category.ACADEMIC,
         globalCompletionRate: 5,
-        xp: 150
+        xp: 150,
+        resources: [
+            { label: 'SEP Application Guide', url: '#', type: 'PDF' },
+            { label: 'Scholarship Listings', url: '#', type: 'LINK' }
+        ],
+        guestbook: [
+            { username: 'TopG', date: '1w ago', message: 'S/U strategy is key guys.', avatarSeed: 'Eve' },
+            { username: 'Hermione', date: '2w ago', message: 'Ez game.', avatarSeed: 'Fred' }
+        ]
     },
 
   // ==========================================
@@ -121,7 +203,10 @@ export const ACHIEVEMENTS: Achievement[] = [
     type: AchievementType.TASK,
     category: Category.EXPLORATION,
     globalCompletionRate: 98,
-    xp: 10
+    xp: 10,
+    resources: [
+        { label: 'UTown Food Directory', url: '#', type: 'LINK' }
+    ]
   },
     // Sub-branch: Transport
     {
@@ -134,7 +219,14 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.GOAL,
         category: Category.EXPLORATION,
         globalCompletionRate: 12,
-        xp: 75
+        xp: 75,
+        resources: [
+            { label: 'Real-time Bus Telegram Bot', url: '#', type: 'TELEGRAM' },
+            { label: 'The "Walking Shortcut" Map', url: '#', type: 'PDF' }
+        ],
+        guestbook: [
+            { username: 'BusUncle', date: '4d ago', message: 'D1 is always crowded.', avatarSeed: 'George' }
+        ]
     },
     {
         id: 'marathon',
@@ -159,7 +251,10 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.TASK,
         category: Category.EXPLORATION,
         globalCompletionRate: 40,
-        xp: 30
+        xp: 30,
+        resources: [
+            { label: 'Foodie Review Group', url: '#', type: 'TELEGRAM' }
+        ]
     },
     {
         id: 'all_faculties',
@@ -187,7 +282,10 @@ export const ACHIEVEMENTS: Achievement[] = [
     type: AchievementType.TASK,
     category: Category.SOCIAL,
     globalCompletionRate: 80,
-    xp: 20
+    xp: 20,
+    resources: [
+        { label: 'Freshman Guide PDF', url: '#', type: 'PDF' }
+    ]
   },
     // Sub-branch: Night Life
     {
@@ -200,7 +298,10 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.TASK,
         category: Category.SOCIAL,
         globalCompletionRate: 65,
-        xp: 25
+        xp: 25,
+        resources: [
+            { label: 'Late Night Food Map', url: '#', type: 'LINK' }
+        ]
     },
     {
         id: 'hall_stay',
@@ -212,7 +313,10 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.GOAL,
         category: Category.SOCIAL,
         globalCompletionRate: 35,
-        xp: 60
+        xp: 60,
+        resources: [
+            { label: 'Room Decor Inspo', url: '#', type: 'LINK' }
+        ]
     },
     // Sub-branch: CCAs
     {
@@ -225,7 +329,10 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.TASK,
         category: Category.SOCIAL,
         globalCompletionRate: 60,
-        xp: 30
+        xp: 30,
+        resources: [
+            { label: 'CCA Directory', url: '#', type: 'LINK' }
+        ]
     },
     {
         id: 'exco_member',
@@ -237,7 +344,10 @@ export const ACHIEVEMENTS: Achievement[] = [
         type: AchievementType.CHALLENGE,
         category: Category.SOCIAL,
         globalCompletionRate: 15,
-        xp: 120
+        xp: 120,
+        guestbook: [
+            { username: 'Prez_2024', date: '3mos ago', message: 'Worth the CV boost.', avatarSeed: 'Harry' }
+        ]
     },
     {
         id: 'networker',

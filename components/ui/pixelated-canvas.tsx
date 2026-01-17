@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 
 interface PixelatedCanvasProps {
   src: string;
@@ -8,7 +8,7 @@ interface PixelatedCanvasProps {
   dotScale?: number;
   shape?: 'square' | 'circle';
   backgroundColor?: string;
-  dropoutStrength?: number; // 0 to 1 chance of skipping a pixel
+  dropoutStrength?: number; // 0 to 1 chance of skipping a pixel per frame
   interactive?: boolean;
   distortionStrength?: number; // How far pixels move
   distortionRadius?: number;
@@ -16,11 +16,20 @@ interface PixelatedCanvasProps {
   followSpeed?: number; // 0 to 1 (1 = instant)
   jitterStrength?: number; // max pixel offset
   jitterSpeed?: number; // 0 to 1 (how often jitter updates)
-  sampleAverage?: boolean;
-  tintColor?: string;
-  tintStrength?: number;
+  sampleAverage?: boolean; // If true, averages pixels in the cell instead of center sampling
+  tintColor?: string; // Hex color to tint the image
+  tintStrength?: number; // 0 to 1 tint intensity
   className?: string;
 }
+
+const hexToRgb = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 255, g: 255, b: 255 };
+};
 
 export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
   src,
@@ -38,196 +47,211 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
   followSpeed = 0.1,
   jitterStrength = 0,
   jitterSpeed = 1,
+  sampleAverage = true, // Default to high quality
+  tintColor = '#FFFFFF',
+  tintStrength = 0,
   className = '',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const imgRef = useRef<HTMLImageElement | null>(null);
+  const [gridData, setGridData] = useState<{x:number, y:number, r:number, g:number, b:number}[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
   
-  // State for animation physics
-  const mouseRef = useRef({ x: -1000, y: -1000 });
+  // Physics State
+  const mouseRef = useRef({ x: -9999, y: -9999 });
   const focusRef = useRef({ x: width/2, y: height/2 });
   const animationRef = useRef<number>(0);
-  const frameCountRef = useRef(0);
   const jitterMapRef = useRef<Float32Array | null>(null);
 
-  // Load Image
+  // Tint Color Memo
+  const tintRgb = useMemo(() => hexToRgb(tintColor), [tintColor]);
+
+  // 1. Load and Process Image Data
   useEffect(() => {
-    // Reset loaded state when src changes to ensure we process the new image
-    setImageLoaded(false);
-    
+    setIsLoaded(false);
     const img = new Image();
     img.crossOrigin = "Anonymous";
     img.src = src;
+    
     img.onload = () => {
-      imgRef.current = img;
-      setImageLoaded(true);
+        // Create an offscreen canvas to read pixel data
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+        if (!tempCtx) return;
+
+        // Draw the image at the target dimensions to simplify grid logic
+        tempCanvas.width = width;
+        tempCanvas.height = height;
+        tempCtx.drawImage(img, 0, 0, width, height);
+
+        const imgData = tempCtx.getImageData(0, 0, width, height).data;
+        const processedGrid = [];
+
+        const cols = Math.ceil(width / cellSize);
+        const rows = Math.ceil(height / cellSize);
+
+        for (let y = 0; y < rows; y++) {
+            for (let x = 0; x < cols; x++) {
+                let r=0, g=0, b=0, a=0, count=0;
+
+                if (sampleAverage) {
+                    // Average all pixels in the cell
+                    const startX = x * cellSize;
+                    const startY = y * cellSize;
+                    const endX = Math.min(startX + cellSize, width);
+                    const endY = Math.min(startY + cellSize, height);
+
+                    for (let py = startY; py < endY; py++) {
+                        for (let px = startX; px < endX; px++) {
+                            const idx = (py * width + px) * 4;
+                            if (imgData[idx+3] > 20) { // Ignore transparent pixels
+                                r += imgData[idx];
+                                g += imgData[idx+1];
+                                b += imgData[idx+2];
+                                count++;
+                            }
+                        }
+                    }
+                    if (count > 0) {
+                        r = Math.round(r/count);
+                        g = Math.round(g/count);
+                        b = Math.round(b/count);
+                    }
+                } else {
+                    // Center Sample
+                    const cx = Math.min(x * cellSize + Math.floor(cellSize/2), width-1);
+                    const cy = Math.min(y * cellSize + Math.floor(cellSize/2), height-1);
+                    const idx = (cy * width + cx) * 4;
+                    r = imgData[idx];
+                    g = imgData[idx+1];
+                    b = imgData[idx+2];
+                    a = imgData[idx+3];
+                    count = a > 20 ? 1 : 0;
+                }
+
+                if (count > 0) {
+                    // Apply Tint if needed
+                    if (tintStrength > 0) {
+                        r = r + (tintRgb.r - r) * tintStrength;
+                        g = g + (tintRgb.g - g) * tintStrength;
+                        b = b + (tintRgb.b - b) * tintStrength;
+                    }
+
+                    processedGrid.push({
+                        x: x * cellSize,
+                        y: y * cellSize,
+                        r, g, b
+                    });
+                }
+            }
+        }
+        
+        setGridData(processedGrid);
+        
+        // Init Jitter Map
+        jitterMapRef.current = new Float32Array(processedGrid.length * 2);
+        
+        setIsLoaded(true);
     };
-    img.onerror = () => {
-        console.error("Failed to load pixelated canvas image:", src);
-        // We don't set loaded to true, so it might just stick with previous or blank
-    };
-  }, [src]);
+  }, [src, width, height, cellSize, sampleAverage, tintStrength, tintRgb]);
 
-  // Initialize jitter map
+
+  // 2. Render Loop
   useEffect(() => {
-    const cols = Math.max(1, Math.ceil(width / cellSize));
-    const rows = Math.max(1, Math.ceil(height / cellSize));
-    jitterMapRef.current = new Float32Array(cols * rows * 2); // x, y pairs
-  }, [width, height, cellSize]);
-
-  // Render Loop
-  useEffect(() => {
-    if (!imageLoaded || !canvasRef.current || !imgRef.current) return;
-
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!isLoaded || !canvasRef.current) return;
+    const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
 
-    // Temporary canvas for reading pixel data
-    const tempCanvas = document.createElement('canvas');
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) return;
-
-    const cols = Math.max(1, Math.ceil(width / cellSize));
-    const rows = Math.max(1, Math.ceil(height / cellSize));
-    
-    tempCanvas.width = cols;
-    tempCanvas.height = rows;
-
-    try {
-        // Draw image small to abstract details
-        tempCtx.drawImage(imgRef.current, 0, 0, cols, rows);
-    } catch (e) {
-        console.error("Error drawing image to temp context", e);
-        return;
-    }
-    
-    let imgData: Uint8ClampedArray;
-    try {
-        imgData = tempCtx.getImageData(0, 0, cols, rows).data;
-    } catch (e) {
-        console.error("Security error reading canvas data (CORS)", e);
-        return;
-    }
-
     const render = () => {
-      frameCountRef.current++;
-
-      // 1. Lerp Focus Point
-      if (interactive) {
-          const targetX = mouseRef.current.x;
-          const targetY = mouseRef.current.y;
-          
-          // MOVEMENT LOGIC FIX:
-          // Previously we reset to center if mouse was -1000 (away).
-          // This caused the "repel" effect to create a hole in the center of the image when the mouse wasn't hovering.
-          // Now we let it drift to the target (-1000), which effectively removes the distortion cleanly.
-          
-          focusRef.current.x += (targetX - focusRef.current.x) * followSpeed;
-          focusRef.current.y += (targetY - focusRef.current.y) * followSpeed;
-      }
-
-      // 2. Update Jitter Map
-      if (jitterStrength > 0 && jitterMapRef.current) {
-          // Update jitter only occasionally based on speed
-          if (Math.random() < jitterSpeed) {
-             for (let i = 0; i < jitterMapRef.current.length; i++) {
-                 jitterMapRef.current[i] = (Math.random() - 0.5) * jitterStrength;
-             }
-          }
-      }
-
       // Clear
       ctx.fillStyle = backgroundColor;
       ctx.fillRect(0, 0, width, height);
 
+      // Update Focus Point (Smooth Follow)
+      if (interactive) {
+          focusRef.current.x += (mouseRef.current.x - focusRef.current.x) * followSpeed;
+          focusRef.current.y += (mouseRef.current.y - focusRef.current.y) * followSpeed;
+      }
+
+      // Update Jitter
+      if (jitterStrength > 0 && jitterMapRef.current && Math.random() < jitterSpeed) {
+          for (let i = 0; i < jitterMapRef.current.length; i++) {
+              jitterMapRef.current[i] = (Math.random() - 0.5) * jitterStrength;
+          }
+      }
+
       const fx = focusRef.current.x;
       const fy = focusRef.current.y;
 
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          const index = (y * cols + x) * 4;
-          const r = imgData[index];
-          const g = imgData[index + 1];
-          const b = imgData[index + 2];
-          const a = imgData[index + 3];
-
-          if (a < 50) continue;
+      for (let i = 0; i < gridData.length; i++) {
+          const cell = gridData[i];
           
           // Dropout
           if (dropoutStrength > 0 && Math.random() < dropoutStrength) continue;
 
-          // Base Position
-          let originX = x * cellSize;
-          let originY = y * cellSize;
-          let drawX = originX;
-          let drawY = originY;
-
-          // Jitter
-          if (jitterStrength > 0 && jitterMapRef.current) {
-             const jIdx = (y * cols + x) * 2;
-             drawX += jitterMapRef.current[jIdx];
-             drawY += jitterMapRef.current[jIdx+1];
-          }
-
-          // Distortion
+          let drawX = cell.x;
+          let drawY = cell.y;
           let scale = dotScale;
-          
-          if (interactive && distortionStrength > 0) {
-            const centerX = originX + cellSize / 2;
-            const centerY = originY + cellSize / 2;
-            const dx = fx - centerX;
-            const dy = fy - centerY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist < distortionRadius) {
-               const influence = (distortionRadius - dist) / distortionRadius; // 0 to 1
-               
-               if (distortionMode === 'repel') {
-                   // Push away
-                   const angle = Math.atan2(dy, dx);
-                   const repelDist = influence * distortionStrength * 10;
-                   drawX -= Math.cos(angle) * repelDist;
-                   drawY -= Math.sin(angle) * repelDist;
-               } else if (distortionMode === 'lens') {
-                   // Magnify / Bulge
-                   scale = dotScale + (influence * distortionStrength); 
-               } else if (distortionMode === 'swirl') {
-                   // Optional swirl implementation
-                   const angle = Math.atan2(dy, dx);
-                   const rotate = angle + (influence * Math.PI);
-                   // Re-calc position based on rotation around focus
-                   // Complex math skipped for brevity unless requested
-               }
-            }
+
+          // Apply Jitter
+          if (jitterStrength > 0 && jitterMapRef.current) {
+              drawX += jitterMapRef.current[i*2];
+              drawY += jitterMapRef.current[i*2+1];
           }
 
-          ctx.fillStyle = `rgb(${r},${g},${b})`;
+          // Apply Distortion
+          if (interactive && distortionStrength > 0) {
+              const centerX = cell.x + cellSize/2;
+              const centerY = cell.y + cellSize/2;
+              const dx = fx - centerX;
+              const dy = fy - centerY;
+              const dist = Math.sqrt(dx*dx + dy*dy);
+
+              if (dist < distortionRadius) {
+                  const influence = (distortionRadius - dist) / distortionRadius; // 0 to 1
+                  
+                  if (distortionMode === 'repel') {
+                      const angle = Math.atan2(dy, dx);
+                      const push = influence * distortionStrength * 10;
+                      drawX -= Math.cos(angle) * push;
+                      drawY -= Math.sin(angle) * push;
+                  } else if (distortionMode === 'lens') {
+                      // Slight Bulge
+                      scale = dotScale + (influence * distortionStrength * 0.5);
+                  } else if (distortionMode === 'swirl') {
+                       const angle = Math.atan2(dy, dx);
+                       // REDUCED ROTATION FACTOR: was 2, now 0.8 for subtle effect
+                       const rotation = influence * distortionStrength * 0.8; 
+                       const newAngle = angle + rotation;
+                       
+                       // Recalculate position relative to focus point
+                       drawX = fx - (Math.cos(newAngle) * dist) - cellSize/2;
+                       drawY = fy - (Math.sin(newAngle) * dist) - cellSize/2;
+                  }
+              }
+          }
+
+          ctx.fillStyle = `rgb(${cell.r},${cell.g},${cell.b})`;
 
           const drawSize = cellSize * scale;
           const offset = (cellSize - drawSize) / 2;
 
           if (shape === 'circle') {
-            ctx.beginPath();
-            ctx.arc(drawX + cellSize/2, drawY + cellSize/2, drawSize/2, 0, Math.PI * 2);
-            ctx.fill();
+              ctx.beginPath();
+              ctx.arc(drawX + cellSize/2, drawY + cellSize/2, drawSize/2, 0, Math.PI * 2);
+              ctx.fill();
           } else {
-            ctx.fillRect(drawX + offset, drawY + offset, drawSize, drawSize);
+              ctx.fillRect(drawX + offset, drawY + offset, drawSize, drawSize);
           }
-        }
       }
-      
+
       if (interactive) {
-        animationRef.current = requestAnimationFrame(render);
+          animationRef.current = requestAnimationFrame(render);
       }
     };
 
     render();
-
     return () => cancelAnimationFrame(animationRef.current);
-
-  }, [imageLoaded, width, height, cellSize, dotScale, shape, backgroundColor, interactive, distortionRadius, distortionStrength, distortionMode, dropoutStrength, followSpeed, jitterStrength, jitterSpeed]);
+  }, [isLoaded, gridData, width, height, cellSize, dotScale, shape, backgroundColor, interactive, distortionMode, distortionStrength, distortionRadius, dropoutStrength, followSpeed, jitterSpeed, jitterStrength]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!canvasRef.current) return;
@@ -239,7 +263,8 @@ export const PixelatedCanvas: React.FC<PixelatedCanvasProps> = ({
   };
 
   const handleMouseLeave = () => {
-    mouseRef.current = { x: -1000, y: -1000 };
+    // Move focus away to reset distortion
+    mouseRef.current = { x: -9999, y: -9999 };
   };
 
   return (
