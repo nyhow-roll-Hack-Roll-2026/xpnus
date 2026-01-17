@@ -1,0 +1,17 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Left tower -->
+  <rect x="2" y="8" width="3" height="14" fill="#000"/>
+  <rect x="2" y="6" width="1" height="2" fill="#000"/>
+  <!-- Main structure -->
+  <rect x="5" y="10" width="14" height="12" fill="#000"/>
+  <!-- Right tower -->
+  <rect x="19" y="8" width="3" height="14" fill="#000"/>
+  <rect x="22" y="6" width="1" height="2" fill="#000"/>
+  <!-- Windows -->
+  <rect x="7" y="12" width="2" height="2" fill="white"/>
+  <rect x="15" y="12" width="2" height="2" fill="white"/>
+  <rect x="7" y="16" width="2" height="2" fill="white"/>
+  <rect x="15" y="16" width="2" height="2" fill="white"/>
+  <!-- Door -->
+  <rect x="11" y="18" width="2" height="4" fill="white"/>
+</svg>

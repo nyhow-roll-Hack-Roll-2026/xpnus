@@ -1,0 +1,17 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tent sides -->
+  <!-- Left side -->
+  <rect x="2" y="10" width="1" height="12" fill="#000"/>
+  <rect x="3" y="9" width="1" height="13" fill="#000"/>
+  <rect x="4" y="8" width="1" height="14" fill="#000"/>
+  <rect x="5" y="7" width="1" height="15" fill="#000"/>
+  <!-- Right side -->
+  <rect x="22" y="10" width="1" height="12" fill="#000"/>
+  <rect x="21" y="9" width="1" height="13" fill="#000"/>
+  <rect x="20" y="8" width="1" height="14" fill="#000"/>
+  <rect x="19" y="7" width="1" height="15" fill="#000"/>
+  <!-- Peak pole -->
+  <rect x="11" y="3" width="2" height="8" fill="#000"/>
+  <!-- Door -->
+  <rect x="10" y="12" width="4" height="10" fill="white"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield outline -->
+  <rect x="4" y="2" width="16" height="14" fill="#000"/>
+  <!-- Shield point -->
+  <rect x="10" y="16" width="4" height="6" fill="#000"/>
+  <!-- Shield interior -->
+  <rect x="6" y="4" width="12" height="12" fill="white"/>
+  <!-- Cross -->
+  <rect x="10" y="7" width="2" height="8" fill="#000"/>
+  <rect x="8" y="10" width="6" height="2" fill="#000"/>
+</svg>

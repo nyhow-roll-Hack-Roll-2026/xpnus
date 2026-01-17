@@ -80,7 +80,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'New World Created',
     description: 'Matriculate into the National University of Singapore.',
     lore: 'Welcome to the server. The difficulty is locked to Hardcore Mode.',
-    iconName: 'MapPin',
+    iconName: '/icons/pixels/map-pin.svg',
     type: AchievementType.ROOT,
     category: Category.GENERAL,
     globalCompletionRate: 100,
@@ -103,7 +103,43 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'First Crafting Recipe',
     description: 'Attend your first lecture and learn the basics.',
     lore: 'Knowledge acquired. Retention rate: Approximately 50%.',
-    iconName: 'BookOpen',
+    iconName: '/icons/pixels/book-open.svg',
+    type: AchievementType.TASK,
+    category: Category.ACADEMIC,
+    globalCompletionRate: 95,
+    xp: 10
+  },
+  {
+    id: 'first_tutorial',
+    parentId: 'nus_start',
+    title: 'First Building Block',
+    description: 'Attend your first tutorial and learn the basics.',
+    lore: 'A small step towards mastery.',
+    iconName: '/icons/pixels/book-open.svg',
+    type: AchievementType.TASK,
+    category: Category.ACADEMIC,
+    globalCompletionRate: 95,
+    xp: 10
+  },
+  {
+    id: 'library_scholar',
+    parentId: 'nus_start',
+    title: 'Unlock Hidden Wisdom',
+    description: 'Study in any school library.',
+    lore: 'Knowledge is power.',
+    iconName: '/icons/pixels/book-open.svg',
+    type: AchievementType.TASK,
+    category: Category.ACADEMIC,
+    globalCompletionRate: 95,
+    xp: 10
+  },
+  {
+    id: 'first_exam',
+    parentId: 'nus_start',
+    title: 'First Trial By Fire',
+    description: 'Take your first exam and excel in your course.',
+    lore: 'Survivability was not guaranteed.',
+    iconName: '/icons/pixels/book-open.svg',
     type: AchievementType.TASK,
     category: Category.ACADEMIC,
     globalCompletionRate: 95,
@@ -120,11 +156,35 @@ export const ACHIEVEMENTS: Achievement[] = [
     // Sub-branch: Grinding/Studying
     {
         id: 'study_session',
-        parentId: 'first_lecture',
+        parentId: 'library_scholar',
         title: 'Enchanting Table',
         description: 'Complete a continuous 10-hour study session in the Central Library.',
         lore: 'Buff applied: "Focused". Stamina draining rapidly.',
-        iconName: 'Zap',
+        iconName: '/icons/pixels/zap.svg',
+    type: AchievementType.GOAL,
+    category: Category.ACADEMIC,
+    globalCompletionRate: 15,
+    xp: 50
+  },
+  {
+    id: 'seminar_sage',
+    parentId: 'first_lecture',
+    title: 'Seminar Sage',
+    description: 'Present at a seminar.',
+    lore: 'Sharing knowledge is the key to growth.',
+    iconName: '/icons/pixels/book-open.svg',
+    type: AchievementType.GOAL,
+    category: Category.ACADEMIC,
+    globalCompletionRate: 15,
+    xp: 50
+  },
+  {
+    id: 'Competition_Challenger',
+    parentId: 'first_lecture',
+    title: 'Competition Challenger',
+    description: 'Participate in an academic competition.',
+    lore: 'The thrill of competition sharpens the mind.',
+    iconName: '/icons/pixels/book-open.svg',
         type: AchievementType.GOAL,
         category: Category.ACADEMIC,
         globalCompletionRate: 15,
@@ -175,18 +235,28 @@ export const ACHIEVEMENTS: Achievement[] = [
         title: 'Hero of the Village',
         description: 'Get on the Dean\'s List for a semester.',
         lore: 'Achievement unlocked: Galaxy Brain. Loot quality increased.',
-        iconName: 'Crown',
+        iconName: '/icons/pixels/crown.svg',
+    type: AchievementType.CHALLENGE,
+    category: Category.ACADEMIC,
+    globalCompletionRate: 5,
+    xp: 100
+  },
+  {
+    id: 'Mentor_Master',
+    parentId: 'Competition_Challenger',
+    title: 'Mentor Master',
+    description: 'Mentor a Junior Student.',
+    lore: 'Guiding others is the path to mastery.',
+    iconName: '/icons/pixels/crown.svg',
         type: AchievementType.CHALLENGE,
         category: Category.ACADEMIC,
-        globalCompletionRate: 5,
-        xp: 150,
+        globalCompletionRate: 10,
+        xp: 50,
         resources: [
-            { label: 'SEP Application Guide', url: '#', type: 'PDF' },
-            { label: 'Scholarship Listings', url: '#', type: 'LINK' }
+            { label: 'Mentorship Guide', url: '#', type: 'LINK' }
         ],
         guestbook: [
-            { username: 'TopG', date: '1w ago', message: 'S/U strategy is key guys.', avatarSeed: 'Eve' },
-            { username: 'Hermione', date: '2w ago', message: 'Ez game.', avatarSeed: 'Fred' }
+            { username: 'MentorGuru', date: '1d ago', message: 'Pay it forward!', avatarSeed: 'Eve' }
         ]
     },
 
@@ -199,93 +269,169 @@ export const ACHIEVEMENTS: Achievement[] = [
     title: 'Discover Stronghold',
     description: 'Visit University Town (UTown) for the first time.',
     lore: 'New region discovered: The land of infinite Starbucks and grass.',
-    iconName: 'Castle',
+    iconName: '/icons/pixels/castle.svg',
     type: AchievementType.TASK,
     category: Category.EXPLORATION,
     globalCompletionRate: 98,
-    xp: 10,
-    resources: [
-        { label: 'UTown Food Directory', url: '#', type: 'LINK' }
-    ]
+    xp: 10
   },
-    // Sub-branch: Transport
-    {
-        id: 'bus_master',
-        parentId: 'utown_visit',
-        title: 'Minecart Master',
-        description: 'Take every internal shuttle bus route (A1, A2, D1, D2, K, E, BTC) at least once.',
-        lore: 'Fast travel network synchronised. Please move to the rear.',
-        iconName: 'TrainFront',
-        type: AchievementType.GOAL,
-        category: Category.EXPLORATION,
-        globalCompletionRate: 12,
-        xp: 75,
-        resources: [
-            { label: 'Real-time Bus Telegram Bot', url: '#', type: 'TELEGRAM' },
-            { label: 'The "Walking Shortcut" Map', url: '#', type: 'PDF' }
-        ],
-        guestbook: [
-            { username: 'BusUncle', date: '4d ago', message: 'D1 is always crowded.', avatarSeed: 'George' }
-        ]
-    },
-    {
-        id: 'marathon',
-        parentId: 'bus_master',
-        title: 'Speedrunner',
-        description: 'Run a full marathon distance accumulatively around the school server.',
-        lore: 'Agility stat maxed. The map is your playground.',
-        iconName: 'Footprints',
-        type: AchievementType.CHALLENGE,
-        category: Category.EXPLORATION,
-        globalCompletionRate: 2,
-        xp: 150
-    },
-    // Sub-branch: Locations/Food
-    {
-        id: 'canteen_hopper',
-        parentId: 'utown_visit',
-        title: 'Food Source',
-        description: 'Eat at The Deck, The Frontier, and Fine Food in the same week.',
-        lore: 'Culinary exploration complete. Health fully restored.',
-        iconName: 'Utensils',
-        type: AchievementType.TASK,
-        category: Category.EXPLORATION,
-        globalCompletionRate: 40,
-        xp: 30,
-        resources: [
-            { label: 'Foodie Review Group', url: '#', type: 'TELEGRAM' }
-        ]
-    },
-    {
-        id: 'all_faculties',
-        parentId: 'canteen_hopper',
-        title: 'Biomes O\' Plenty',
-        description: 'Visit every single faculty campus biome (FASS, FOE, SOC, Science, Music, Law).',
-        lore: 'World map 100% explored. You have touched grass everywhere.',
-        iconName: 'Compass',
-        type: AchievementType.GOAL,
-        category: Category.EXPLORATION,
-        globalCompletionRate: 30,
-        xp: 100
-    },
+  {
+    id: 'museum_visit',
+    parentId: 'nus_start',
+    title: 'Ancient Wanderer',
+    description: 'Visit NUS Museum for the first time.',
+    lore: 'Artifacts of a bygone era. Look but don\'t touch.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.TASK,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 98,
+    xp: 10
+  },
+  {
+    id: 'gym_visit',
+    parentId: 'nus_start',
+    title: 'Bulk Bro',
+    description: 'Visit any NUS gym for the first time.',
+    lore: 'Strength stat increased. Soreness status effect active.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.TASK,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 50,
+    xp: 10
+  },
+  {
+    id: 'pool_visit',
+    parentId: 'nus_start',
+    title: 'Aquatic Adventurer',
+    description: 'Visit any NUS pool for the first time.',
+    lore: 'Swimming skill +1. Don\'t forget to breathe.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.TASK,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 50,
+    xp: 10
+  },
+  {
+    id: 'club_event',
+    parentId: 'nus_start',
+    title: 'Club Explorer',
+    description: 'Join any student-led club event for the first time.',
+    lore: 'Social stats boosting... or social battery draining.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.TASK,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 75,
+    xp: 10
+  },
+  {
+    id: 'pgp_mala',
+    parentId: 'nus_start',
+    title: 'Testing Tastebuds',
+    description: 'Try PGP Mala for the first time.',
+    lore: 'Spiciness Level: Critical. Tongue numbness imminent.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.TASK,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 90,
+    xp: 10
+  },
+  {
+    id: 'chick_visit',
+    parentId: 'utown_visit',
+    title: 'Animal Whisperer',
+    description: 'Take a photo of the chickens in NUS',
+    lore: 'They are the true owners of the campus.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.GOAL,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 90,
+    xp: 50
+  },
+  {
+    id: 'merch_collector',
+    parentId: 'utown_visit',
+    title: 'Merch Collector',
+    description: 'Collect 3 different NUS tshirts.',
+    lore: 'Inventory space decreasing. Pride increasing.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.GOAL,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 30,
+    xp: 50
+  },
+  {
+    id: 'watch_performance',
+    parentId: 'museum_visit',
+    title: 'Captivated Audience',
+    description: 'Watch an arts performance in NUS.',
+    lore: 'Culture stats updated.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.GOAL,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 15,
+    xp: 50
+  },
+  {
+    id: 'tour_guide',
+    parentId: 'merch_collector',
+    title: 'Guide of Realms',
+    description: 'Give a campus tour to students or visitors.',
+    lore: 'Map data shared with allied players.',
+    iconName: '/icons/pixels/castle.svg',
+    type: AchievementType.CHALLENGE,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 5,
+    xp: 100
+  },
+  {
+    id: 'all_faculties',
+    parentId: 'utown_visit',
+    title: 'Biomes O\' Plenty',
+    description: 'Visit every single faculty campus biome (FASS, FOE, SOC, Science, etc.).',
+    lore: 'Biome exploration 100% complete.',
+    iconName: '/icons/pixels/compass.svg',
+    type: AchievementType.GOAL,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 30,
+    xp: 50
+  },
+  {
+    id: 'bus_master',
+    parentId: 'all_faculties',
+    title: 'Minecart Master',
+    description: 'Take every internal shuttle bus route (A1, A2, D1, D2, K, E, BTC) at least once.',
+    lore: 'Route memorization complete. Punctuality +10.',
+    iconName: '/icons/pixels/train-front.svg',
+    type: AchievementType.GOAL,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 12,
+    xp: 50
+  },
+  {
+    id: 'marathon',
+    parentId: 'bus_master',
+    title: 'Speedrunner',
+    description: 'Run a full marathon distance accumulatively around the school server.',
+    lore: 'Endurance stat maxed.',
+    iconName: '/icons/pixels/footprints.svg',
+    type: AchievementType.CHALLENGE,
+    category: Category.EXPLORATION,
+    globalCompletionRate: 2,
+    xp: 100
+  },
 
-  // ==========================================
-  // SOCIAL BRANCH (Purple)
-  // ==========================================
+  // --- SOCIAL BRANCH ---
   {
     id: 'orientation',
     parentId: 'nus_start',
     title: 'Spawn Point Party',
     description: 'Participate in a freshman orientation camp.',
     lore: 'Party formed. Social links established. Cringe tolerance increased.',
-    iconName: 'Tent',
+    iconName: '/icons/pixels/tent.svg',
     type: AchievementType.TASK,
     category: Category.SOCIAL,
     globalCompletionRate: 80,
-    xp: 20,
-    resources: [
-        { label: 'Freshman Guide PDF', url: '#', type: 'PDF' }
-    ]
+    xp: 10
   },
     // Sub-branch: Night Life
     {
@@ -380,5 +526,99 @@ export const ACHIEVEMENTS: Achievement[] = [
         guestbook: [
             { username: 'CodeBuddy', date: '1w ago', message: 'Found my hackathon partner here!', avatarSeed: 'Ivan' }
         ]
-    }
+    },
+  {
+    id: 'class_friend',
+    parentId: 'orientation',
+    title: 'Party of Two',
+    description: 'Make a friend in your class.',
+    lore: 'Party invitation accepted.',
+    iconName: '/icons/pixels/tent.svg',
+    type: AchievementType.GOAL,
+    category: Category.SOCIAL,
+    globalCompletionRate: 80,
+    xp: 50
+  },
+  {
+    id: 'cross_faculty_friend',
+    parentId: 'class_friend',
+    title: 'Befriender of Different Realms',
+    description: 'Make a friend from a different faculty.',
+    lore: 'Inter-server communication established.',
+    iconName: '/icons/pixels/tent.svg',
+    type: AchievementType.CHALLENGE,
+    category: Category.SOCIAL,
+    globalCompletionRate: 40,
+    xp: 100
+  },
+  {
+    id: 'canteen',
+    parentId: 'nus_start',
+    title: 'Conqueror of Lands',
+    description: 'Try out your faculty\'s canteen.',
+    lore: 'Consumables acquired.',
+    iconName: '/icons/pixels/tent.svg',
+    type: AchievementType.TASK,
+    category: Category.SOCIAL,
+    globalCompletionRate: 95,
+    xp: 10
+  },
+  {
+    id: 'cc_activity',
+    parentId: 'orientation',
+    title: 'Joined a Faction',
+    description: 'Join a CCA, Student Club, or Guild.',
+    lore: 'Faction allegiance pledged.',
+    iconName: '/icons/pixels/shield.svg',
+    type: AchievementType.GOAL,
+    category: Category.SOCIAL,
+    globalCompletionRate: 60,
+    xp: 50
+  },
+  {
+    id: 'campus_event',
+    parentId: 'cross_faculty_friend',
+    title: 'Village Festival',
+    description: 'Participate in a campus-wide event (e.g., Rag & Flag, Supernova, Career Fair).',
+    lore: 'Festivities enjoyed. Community spirit boosted.',
+    iconName: '/icons/pixels/ticket.svg',
+    type: AchievementType.GOAL,
+    category: Category.SOCIAL,
+    globalCompletionRate: 40,
+    xp: 50
+  },
+  {
+    id: 'networker',
+    parentId: 'campus_event',
+    title: 'Diplomat of Realms',
+    description: 'Make friends with at least one villager from every faculty biome.',
+    lore: 'Charisma check passed.',
+    iconName: '/icons/pixels/users.svg',
+    type: AchievementType.CHALLENGE,
+    category: Category.SOCIAL,
+    globalCompletionRate: 1,
+    xp: 100
+  },
+  {
+    id: 'IFG',
+    parentId: 'campus_event',
+    title: 'Festival Veteran',
+    description: 'Represent your faculty in IFG.',
+    lore: 'Inter-faculty rivalry settled. Glory achieved.',
+    iconName: '/icons/pixels/tent.svg',
+    type: AchievementType.CHALLENGE,
+    category: Category.SOCIAL,
+    globalCompletionRate: 5,
+    xp: 100
+  }
 ];
+
+// Explicitly adding missing 'lore' property to each Achievement object
+ACHIEVEMENTS.forEach((achievement, index) => {
+    if (!achievement.lore) {
+        ACHIEVEMENTS[index] = {
+            ...achievement,
+            lore: 'Default lore text.' // Explicitly added
+        };
+    }
+});

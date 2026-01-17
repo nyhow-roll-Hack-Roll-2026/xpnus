@@ -47,6 +47,8 @@ export const AchievementIcon: React.FC<Props> = ({ iconName, type, category, unl
 
   const containerSize = 'w-20 h-20'; 
 
+  const isSvgPath = iconName.endsWith('.svg');
+
   return (
     <CardContainer containerClassName={containerSize} className="w-full h-full">
         <CardBody className="relative w-full h-full">
@@ -95,15 +97,19 @@ export const AchievementIcon: React.FC<Props> = ({ iconName, type, category, unl
                             className="relative z-10 flex items-center justify-center"
                         >
                             <div style={{ transform: isChallenge ? 'rotate(-45deg)' : 'none' }}>
-                                <LucideIcon 
-                                    size={size} 
-                                    color={unlocked ? '#FFFFFF' : '#a1a1aa'}
-                                    strokeWidth={unlocked ? 3 : 2}
-                                    className={`
-                                        filter drop-shadow-md transition-all duration-300
-                                        ${unlocked ? 'drop-shadow-[2px_2px_0px_rgba(0,0,0,0.4)]' : ''}
-                                    `}
-                                />
+                                {isSvgPath ? (
+                                    <img 
+                                        src={iconName}
+                                        alt="icon"
+                                        width={size}
+                                        height={size}
+                                        style={{
+                                            filter: unlocked ? 'brightness(1) drop-shadow(2px 2px 0px rgba(0,0,0,0.6))' : 'brightness(0.6) drop-shadow(2px 2px 0px rgba(0,0,0,0.3))',
+                                            opacity: unlocked ? 1 : 0.6
+                                        }}
+                                        className="transition-all duration-300"
+                                    />
+                                ) : null}
                             </div>
                         </CardItem>
                     </div>
