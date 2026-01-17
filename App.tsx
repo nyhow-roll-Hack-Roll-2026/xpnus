@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Menu, X, Compass, Plus, Minus, Package, Search, List, Bell } from 'lucide-react'; 
+import { Menu, X, Compass, Plus, Minus, Package, Search, List, Mail, Users } from 'lucide-react'; 
 import { ACHIEVEMENTS, TROPHIES, CATEGORY_COLORS, TIPS } from './constants';
 import { AchievementIcon } from './components/AchievementIcon';
 import { AchievementModal } from './components/AchievementModal';
@@ -578,30 +578,30 @@ const App: React.FC = () => {
                 </p>
             </div>
         </div>
-        <div className="flex gap-2 sm:gap-4">
+        <div className="flex gap-2 sm:gap-4 items-center">
              <div className="text-right hidden md:block">
                  <p className="text-xs text-mc-goldDim uppercase tracking-widest">Current Session</p>
                  <p className="text-xl text-gray-200">Year 1, Sem 1</p>
              </div>
              
-             {/* Pending Invites Bell */}
+             <MinecraftButton onClick={() => setShowSearch(true)} className="h-20 px-3 flex items-center justify-center" variant="default">
+                <Search size={20} />
+             </MinecraftButton>
+
+             {/* Co-op Invites Mail Button */}
              <button 
                  onClick={() => setShowPendingInvites(true)} 
-                 className="relative flex items-center justify-center w-10 h-10 bg-black/60 border-2 border-purple-500/50 rounded hover:bg-purple-500/20 transition-colors"
+                 className="relative h-20 px-3 flex items-center justify-center bg-purple-900/60 border-2 border-purple-500/50 rounded hover:bg-purple-600/40 hover:border-purple-400 transition-all"
              >
-                <Bell size={20} className="text-purple-400" />
+                <Mail size={20} className="text-purple-300" />
                 {pendingInviteCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
                         {pendingInviteCount}
                     </span>
                 )}
              </button>
-             
-             <MinecraftButton onClick={() => setShowSearch(true)} className="flex items-center gap-2" variant="default">
-                <Search size={20} />
-             </MinecraftButton>
 
-             <MinecraftButton onClick={() => setShowInventory(true)} className="hidden sm:flex items-center gap-2" variant="green">
+             <MinecraftButton onClick={() => setShowInventory(true)} className="hidden sm:flex items-center gap-2 h-20" variant="green">
                 <Package size={20} />
                 INVENTORY
              </MinecraftButton>
@@ -670,12 +670,12 @@ const App: React.FC = () => {
             <div className="absolute top-4 right-4 z-30 pointer-events-auto flex flex-row items-start gap-2">
                 {/* List Button */}
                 <MinecraftButton onClick={() => setShowAchievementList(true)} className="w-10 h-10 flex items-center justify-center !p-0 bg-black/80 border-white/20" variant="default">
-                    <List size={20} />
+                    <List size={18} />
                 </MinecraftButton>
 
             {/* Achievement Search Overlay (Expandable) */}
                 <div className="relative group">
-                    <div className={`flex items-center bg-black/80 border-2 rounded-sm p-1 shadow-lg backdrop-blur-sm transition-all duration-300 ${achievementSearchQuery ? 'border-mc-gold w-64' : 'border-white/20 w-10 hover:w-64 focus-within:w-64 overflow-hidden'}`}>
+                    <div className={`flex items-center bg-black/80 border-2 rounded-sm shadow-lg backdrop-blur-sm transition-all duration-300 h-10 ${achievementSearchQuery ? 'border-mc-gold w-64 p-1' : 'border-white/20 w-10 hover:w-64 focus-within:w-64 overflow-hidden p-1'}`}>
                             <div className="shrink-0 w-8 h-8 flex items-center justify-center text-gray-400">
                                 <Search size={18} />
                             </div>
@@ -875,8 +875,13 @@ const App: React.FC = () => {
                                     />
                                     {/* Default title tooltip (hidden if proof is showing to avoid clutter, or kept for consistency) */}
                                     {!hoveredProof && (
-                                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/90 backdrop-blur text-mc-gold px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 border border-mc-gold/50 font-pixel tracking-wide shadow-[0_0_10px_rgba(0,0,0,1)]">
+                                        <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/90 backdrop-blur text-mc-gold px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 border border-mc-gold/50 font-pixel tracking-wide shadow-[0_0_10px_rgba(0,0,0,1)] flex items-center gap-2">
                                             {node.title}
+                                            {node.type === AchievementType.COOP && (
+                                                <span className="text-[9px] bg-purple-600 text-white px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                    <Users size={10} /> CO-OP
+                                                </span>
+                                            )}
                                         </div>
                                     )}
                                 </div>

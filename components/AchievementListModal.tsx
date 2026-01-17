@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { X, Check, Lock, List, Filter, Search } from 'lucide-react';
+import { X, Check, Lock, List, Filter, Search, Users } from 'lucide-react';
 import { ACHIEVEMENTS, CATEGORY_COLORS } from '../constants';
-import { Achievement, Category, UserProgress } from '../types';
+import { Achievement, AchievementType, Category, UserProgress } from '../types';
 import * as Icons from 'lucide-react';
 
 interface Props {
@@ -170,8 +170,13 @@ export const AchievementListModal: React.FC<Props> = ({ onClose, onSelectAchieve
                                         <h3 className={`font-bold text-lg truncate ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>
                                             {ach.title}
                                         </h3>
-                                        {isUnlocked && <Check size={16} className="text-green-500" />}
-                                        {!isUnlocked && <Lock size={14} className="text-gray-600" />}
+                                        {ach.type === AchievementType.COOP && (
+                                            <span className="text-[9px] bg-purple-600 text-white px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
+                                                <Users size={10} /> CO-OP
+                                            </span>
+                                        )}
+                                        {isUnlocked && <Check size={16} className="text-green-500 shrink-0" />}
+                                        {!isUnlocked && <Lock size={14} className="text-gray-600 shrink-0" />}
                                     </div>
                                     <p className={`text-sm truncate ${isUnlocked ? 'text-gray-400' : 'text-gray-600'}`}>
                                         {ach.description}
