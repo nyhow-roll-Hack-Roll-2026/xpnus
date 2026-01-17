@@ -28,3 +28,9 @@ export interface UserProgress {
   unlockedIds: string[];
   totalXp: number;
 }
+
+export interface User {
+  username: string;
+  avatarUrl: string;
+  createdAt: number;
+}

@@ -1,10 +1,17 @@
 import { Achievement, AchievementType, Category } from './types';
 
+export const AVATARS = [
+    "https://api.dicebear.com/9.x/pixel-art/png?seed=Steve",
+    "https://api.dicebear.com/9.x/pixel-art/png?seed=Alex",
+    "https://api.dicebear.com/9.x/pixel-art/png?seed=Creeper",
+    "https://api.dicebear.com/9.x/pixel-art/png?seed=NUS",
+];
+
 export const ACHIEVEMENTS: Achievement[] = [
   // --- ROOT ---
   {
     id: 'nus_start',
-    title: 'Welcome to NUS',
+    title: 'New World Created',
     description: 'Matriculate into the National University of Singapore.',
     iconName: 'MapPin',
     type: AchievementType.ROOT,
@@ -17,8 +24,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first_lecture',
     parentId: 'nus_start',
-    title: 'Taking Notes',
-    description: 'Attend your first lecture without falling asleep.',
+    title: 'First Crafting Recipe',
+    description: 'Attend your first lecture and learn the basics.',
     iconName: 'BookOpen',
     type: AchievementType.TASK,
     category: Category.ACADEMIC,
@@ -28,9 +35,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'study_session',
     parentId: 'first_lecture',
-    title: 'Library Dweller',
-    description: 'Complete a continuous 10-hour study session in Central Library.',
-    iconName: 'Clock',
+    title: 'Enchanting Table',
+    description: 'Complete a continuous 10-hour study session in the Central Library.',
+    iconName: 'Zap',
     type: AchievementType.GOAL,
     category: Category.ACADEMIC,
     globalCompletionRate: 15,
@@ -39,9 +46,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'deans_list',
     parentId: 'study_session',
-    title: 'Top of the Class',
+    title: 'Hero of the Village',
     description: 'Get on the Dean\'s List for a semester.',
-    iconName: 'Trophy',
+    iconName: 'Crown',
     type: AchievementType.CHALLENGE,
     category: Category.ACADEMIC,
     globalCompletionRate: 5,
@@ -52,9 +59,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'utown_visit',
     parentId: 'nus_start',
-    title: 'Concrete Jungle',
+    title: 'Discover Stronghold',
     description: 'Visit University Town (UTown) for the first time.',
-    iconName: 'Building',
+    iconName: 'Castle',
     type: AchievementType.TASK,
     category: Category.EXPLORATION,
     globalCompletionRate: 98,
@@ -63,8 +70,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'all_faculties',
     parentId: 'utown_visit',
-    title: 'The Tourist',
-    description: 'Visit every single faculty campus (FASS, FOE, SOC, Science, etc.).',
+    title: 'Biomes O\' Plenty',
+    description: 'Visit every single faculty campus biome (FASS, FOE, SOC, Science, etc.).',
     iconName: 'Compass',
     type: AchievementType.GOAL,
     category: Category.EXPLORATION,
@@ -74,9 +81,9 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'bus_master',
     parentId: 'all_faculties',
-    title: 'Bus Captain',
+    title: 'Minecart Master',
     description: 'Take every internal shuttle bus route (A1, A2, D1, D2, K, E, BTC) at least once.',
-    iconName: 'Bus',
+    iconName: 'TrainFront',
     type: AchievementType.GOAL,
     category: Category.EXPLORATION,
     globalCompletionRate: 12,
@@ -85,8 +92,8 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'marathon',
     parentId: 'bus_master',
-    title: 'Iron Legs',
-    description: 'Run a full marathon distance accumulatively around the school campus.',
+    title: 'Speedrunner',
+    description: 'Run a full marathon distance accumulatively around the school server.',
     iconName: 'Footprints',
     type: AchievementType.CHALLENGE,
     category: Category.EXPLORATION,
@@ -98,7 +105,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'orientation',
     parentId: 'nus_start',
-    title: 'Ice Breaker',
+    title: 'Spawn Point Party',
     description: 'Participate in a freshman orientation camp.',
     iconName: 'Tent',
     type: AchievementType.TASK,
@@ -109,20 +116,31 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'cc_activity',
     parentId: 'orientation',
-    title: 'Extra Curricular',
-    description: 'Join a CCA or Student Club.',
-    iconName: 'Users',
+    title: 'Joined a Faction',
+    description: 'Join a CCA, Student Club, or Guild.',
+    iconName: 'Shield',
     type: AchievementType.TASK,
     category: Category.SOCIAL,
     globalCompletionRate: 60,
     xp: 30
   },
   {
-    id: 'networker',
+    id: 'campus_event',
     parentId: 'cc_activity',
-    title: 'Mr. Worldwide',
-    description: 'Make friends with at least one person from every faculty.',
-    iconName: 'Globe',
+    title: 'Village Festival',
+    description: 'Participate in a campus-wide event (e.g., Rag & Flag, Supernova, Career Fair).',
+    iconName: 'Ticket',
+    type: AchievementType.GOAL,
+    category: Category.SOCIAL,
+    globalCompletionRate: 40,
+    xp: 50
+  },
+  {
+    id: 'networker',
+    parentId: 'campus_event',
+    title: 'Diplomat of Realms',
+    description: 'Make friends with at least one villager from every faculty biome.',
+    iconName: 'Users',
     type: AchievementType.CHALLENGE,
     category: Category.SOCIAL,
     globalCompletionRate: 1,
