@@ -757,12 +757,12 @@ const App: React.FC = () => {
                 <div className="relative flex-1 flex flex-col h-full overflow-hidden">
 
                     {/* Filter Overlay */}
-                    <div className="absolute top-4 left-0 w-full px-4 z-30 pointer-events-auto overflow-x-auto no-scrollbar">
-                        <div className="flex gap-2 min-w-max pb-2">
+                    <div className="absolute top-4 left-0 w-full px-4 z-30 pointer-events-none overflow-x-auto no-scrollbar">
+                        <div className="flex gap-2 min-w-max pb-2 pointer-events-none">
                             <MinecraftButton
                                 variant={filterCategory === 'ALL' ? 'green' : 'default'}
                                 onClick={() => setFilterCategory('ALL')}
-                                className="text-xs sm:text-sm px-3 py-1"
+                                className="text-xs sm:text-sm px-3 py-1 pointer-events-auto"
                             >
                                 ALL
                             </MinecraftButton>
@@ -771,7 +771,7 @@ const App: React.FC = () => {
                                     key={cat}
                                     variant={filterCategory === cat ? 'green' : 'default'}
                                     onClick={() => setFilterCategory(cat)}
-                                    className="text-xs sm:text-sm px-3 py-1"
+                                    className="text-xs sm:text-sm px-3 py-1 pointer-events-auto"
                                 >
                                     {cat.toUpperCase()}
                                 </MinecraftButton>
