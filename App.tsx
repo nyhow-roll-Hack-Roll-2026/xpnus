@@ -991,20 +991,19 @@ const App: React.FC = () => {
                         onSelectUser={handleSelectUserToView}
                     />
                 )}
-
-                {
-                    showAchievementList && (
-                        <AchievementListModal
-                            onClose={() => setShowAchievementList(false)}
-                            onSelectAchievement={(ach) => {
-                                setShowAchievementList(false);
-                                handleCenterOnNode(ach.id);
-                            }}
-                            progress={displayProgress}
-                        />
-                    )
-                }
             </div>
+
+            {/* Achievement List Modal - Rendered at root level for proper z-index */}
+            {showAchievementList && (
+                <AchievementListModal
+                    onClose={() => setShowAchievementList(false)}
+                    onSelectAchievement={(ach) => {
+                        setShowAchievementList(false);
+                        handleCenterOnNode(ach.id);
+                    }}
+                    progress={displayProgress}
+                />
+            )}
         </div >
     );
 };
