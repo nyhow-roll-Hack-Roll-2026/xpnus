@@ -12,11 +12,20 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { MinecraftButton } from '../../components/MinecraftButton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export function SignUpForm({ className, onToggleView, ...props }: React.ComponentPropsWithoutRef<'div'> & { onToggleView?: () => void }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [repeatPassword, setRepeatPassword] = useState('')
+  const [yearOfStudy, setYearOfStudy] = useState('')
+  const [degree, setDegree] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -30,17 +39,43 @@ export function SignUpForm({ className, onToggleView, ...props }: React.Componen
       setError('Passwords do not match')
       return
     }
+
+    if (!yearOfStudy || !degree) {
+      setError('Please fill in all fields')
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signUp({
+      // 1. Sign up the user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        },
       })
-      if (error) throw error
+
+      if (signUpError) throw signUpError
+
+      // 2. Create profile entry with additional data
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authData.user.id,
+            email: email,
+            year_of_study: parseInt(yearOfStudy),
+            degree: degree,
+          })
+
+        if (profileError) throw profileError
+      }
+
       setSuccess(true)
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'An error occurred')
+      setError(error instanceof Error ? error.message : 'An error occurred during sign up')
     } finally {
       setIsLoading(false)
     }
@@ -76,12 +111,93 @@ export function SignUpForm({ className, onToggleView, ...props }: React.Componen
                     id="email"
                     type="email"
                     placeholder="quackers@u.nus.edu"
-                    className="text-xl"
+                    className="!text-xl"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
+
+                <div className="grid gap-2">
+                  <Label className="text-2xl" htmlFor="year">Year of Study</Label>
+                  <Select className="bg-black" value={yearOfStudy} onValueChange={setYearOfStudy} required>
+                    <SelectTrigger className="!text-xl">
+                      <SelectValue placeholder="Select your year" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black">
+                      <SelectItem value="1">Year 1</SelectItem>
+                      <SelectItem value="2">Year 2</SelectItem>
+                      <SelectItem value="3">Year 3</SelectItem>
+                      <SelectItem value="4">Year 4</SelectItem>
+                      <SelectItem value="5">Year 5+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label className="text-2xl" htmlFor="degree">Degree</Label>
+                  <Select value={degree} onValueChange={setDegree} required>
+                    <SelectTrigger className="!text-xl">
+                      <SelectValue placeholder="Select your degree" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-black">
+                      <SelectItem value="Business Administration">Business Administration</SelectItem>
+                      <SelectItem value="Business Analytics">Business Analytics</SelectItem>
+                      <SelectItem value="Computer Science">Computer Science</SelectItem>
+                      <SelectItem value="Information Systems">Information Systems</SelectItem>
+                      <SelectItem value="Computer Engineering">Computer Engineering</SelectItem>
+                      <SelectItem value="Business Administration (Accountancy)">Business Administration (Accountancy)</SelectItem>
+                      <SelectItem value="Economics">Economics</SelectItem>
+                      <SelectItem value="Engineering Science">Engineering Science</SelectItem>
+                      <SelectItem value="Chemical Engineering">Chemical Engineering</SelectItem>
+                      <SelectItem value="Civil Engineering">Civil Engineering</SelectItem>
+                      <SelectItem value="Electrical Engineering">Electrical Engineering</SelectItem>
+                      <SelectItem value="Environmental Engineering">Environmental Engineering</SelectItem>
+                      <SelectItem value="Industrial & Systems Engineering">Industrial & Systems Engineering</SelectItem>
+                      <SelectItem value="Materials Science & Engineering">Materials Science & Engineering</SelectItem>
+                      <SelectItem value="Mechanical Engineering">Mechanical Engineering</SelectItem>
+                      <SelectItem value="Biomedical Engineering">Biomedical Engineering</SelectItem>
+                      <SelectItem value="Architecture">Architecture</SelectItem>
+                      <SelectItem value="Industrial Design">Industrial Design</SelectItem>
+                      <SelectItem value="Real Estate">Real Estate</SelectItem>
+                      <SelectItem value="Project & Facilities Management">Project & Facilities Management</SelectItem>
+                      <SelectItem value="Landscape Architecture">Landscape Architecture</SelectItem>
+                      <SelectItem value="Law">Law</SelectItem>
+                      <SelectItem value="Medicine">Medicine</SelectItem>
+                      <SelectItem value="Nursing">Nursing</SelectItem>
+                      <SelectItem value="Pharmacy">Pharmacy</SelectItem>
+                      <SelectItem value="Dentistry">Dentistry</SelectItem>
+                      <SelectItem value="Life Sciences">Life Sciences</SelectItem>
+                      <SelectItem value="Applied Science">Applied Science</SelectItem>
+                      <SelectItem value="Food Science & Technology">Food Science & Technology</SelectItem>
+                      <SelectItem value="Mathematics">Mathematics</SelectItem>
+                      <SelectItem value="Statistics">Statistics</SelectItem>
+                      <SelectItem value="Physics">Physics</SelectItem>
+                      <SelectItem value="Chemistry">Chemistry</SelectItem>
+                      <SelectItem value="Data Science & Analytics">Data Science & Analytics</SelectItem>
+                      <SelectItem value="Quantitative Finance">Quantitative Finance</SelectItem>
+                      <SelectItem value="Philosophy">Philosophy</SelectItem>
+                      <SelectItem value="Chinese Studies">Chinese Studies</SelectItem>
+                      <SelectItem value="English Language & Literature">English Language & Literature</SelectItem>
+                      <SelectItem value="History">History</SelectItem>
+                      <SelectItem value="Geography">Geography</SelectItem>
+                      <SelectItem value="Communications & New Media">Communications & New Media</SelectItem>
+                      <SelectItem value="Social Work">Social Work</SelectItem>
+                      <SelectItem value="Psychology">Psychology</SelectItem>
+                      <SelectItem value="Political Science">Political Science</SelectItem>
+                      <SelectItem value="Environmental Studies">Environmental Studies</SelectItem>
+                      <SelectItem value="Global Studies">Global Studies</SelectItem>
+                      <SelectItem value="Theatre Studies">Theatre Studies</SelectItem>
+                      <SelectItem value="Music">Music</SelectItem>
+                      <SelectItem value="Art History">Art History</SelectItem>
+                      <SelectItem value="South Asian Studies">South Asian Studies</SelectItem>
+                      <SelectItem value="Southeast Asian Studies">Southeast Asian Studies</SelectItem>
+                      <SelectItem value="Japanese Studies">Japanese Studies</SelectItem>
+                      <SelectItem value="Malay Studies">Malay Studies</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
                 <div className="grid gap-2">
                   <div className="flex items-center">
                     <Label
@@ -90,7 +206,7 @@ export function SignUpForm({ className, onToggleView, ...props }: React.Componen
                   <Input
                     id="password"
                     type="password"
-                    className="text-xl"
+                    className="!text-xl"
                     placeholder="quackers secret password!"
                     required
                     value={password}
@@ -108,7 +224,7 @@ export function SignUpForm({ className, onToggleView, ...props }: React.Componen
                     required
                     value={repeatPassword}
                     onChange={(e) => setRepeatPassword(e.target.value)}
-                    className="text-xl"
+                    className="!text-xl"
                     placeholder="quackers secret password!"
                   />
                 </div>

@@ -55,7 +55,7 @@ export function LoginForm({ className, onToggleView, ...props }: React.Component
                 <Input
                   id="email"
                   type="email"
-                  className="text-xl"
+                  className="!text-xl"
                   placeholder="quackers@u.nus.edu"
                   required
                   value={email}
@@ -69,7 +69,7 @@ export function LoginForm({ className, onToggleView, ...props }: React.Component
                 <Input
                   id="password"
                   type="password"
-                  className="text-xl"
+                  className="!text-xl"
                   placeholder="quackers secret password!"
                   required
                   value={password}
