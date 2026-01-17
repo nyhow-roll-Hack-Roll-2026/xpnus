@@ -21,7 +21,8 @@ export const loginUser = async (username: string, avatarUrl: string, isCustom: b
   const user: User = {
     username,
     avatarUrl,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    isCustomAvatar: isCustom
   };
   localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
   return user;

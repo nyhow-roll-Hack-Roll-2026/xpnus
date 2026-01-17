@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { RefreshCcw, Edit3, Save, Lock, ArrowLeft, Eye, Clock } from 'lucide-react';
+import { Edit3, Save, Lock, ArrowLeft, Eye, Clock } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { UserProgress, Category, User } from '../types';
-import { ACHIEVEMENTS, AVATARS, CATEGORY_COLORS, TROPHIES } from '../constants';
+import { ACHIEVEMENTS, CATEGORY_COLORS, TROPHIES } from '../constants';
 import { PixelatedCanvas } from './ui/pixelated-canvas';
 import { TracingBeam } from './ui/tracing-beam';
 import { MinecraftButton } from './MinecraftButton';
@@ -12,7 +12,6 @@ interface Props {
   progress: UserProgress;
   user: User | null;
   onLogout: () => void;
-  onUpdateAvatar: (newUrl: string) => void;
   onUpdateBio?: (newBio: string) => void;
   isReadOnly?: boolean;
   onBack?: () => void;
@@ -22,7 +21,6 @@ export const StatsDashboard: React.FC<Props> = ({
     progress, 
     user, 
     onLogout, 
-    onUpdateAvatar, 
     onUpdateBio,
     isReadOnly = false,
     onBack
@@ -50,7 +48,6 @@ export const StatsDashboard: React.FC<Props> = ({
   }).filter(d => d.value > 0);
 
   const level = Math.floor(progress.totalXp / 100) + 1;
-  const isCustomAvatar = user?.isCustomAvatar || false;
 
   // Get unlocked achievements sorted by most recently added (based on id array order assuming append)
   // For a real app, we would use a timestamp in UserProgress.unlockedIds if it were an object array.
@@ -59,14 +56,6 @@ export const StatsDashboard: React.FC<Props> = ({
     .reverse()
     .map(id => ACHIEVEMENTS.find(a => a.id === id))
     .filter(a => a !== undefined) as typeof ACHIEVEMENTS;
-
-  const handleAvatarClick = () => {
-    if (isReadOnly || isCustomAvatar) return;
-    const currentUrl = user?.avatarUrl || AVATARS[0];
-    const currentIndex = AVATARS.indexOf(currentUrl);
-    const nextIndex = (currentIndex === -1 ? 0 : currentIndex + 1) % AVATARS.length;
-    onUpdateAvatar(AVATARS[nextIndex]);
-  };
 
   const handleSaveBio = () => {
       setIsEditingBio(false);
@@ -103,9 +92,7 @@ export const StatsDashboard: React.FC<Props> = ({
         {/* User Avatar Section */}
         <div className="bg-black/50 p-3 rounded border border-white/5 mb-6 flex flex-col sm:flex-row gap-4 items-center shadow-inner">
             <div 
-                className={`bg-black border border-white/20 w-[80px] h-[80px] shrink-0 overflow-hidden relative group rounded-sm shadow-[0_0_15px_rgba(255,255,255,0.1)] ${(!isCustomAvatar && !isReadOnly) ? 'cursor-pointer' : 'cursor-default'}`}
-                onClick={handleAvatarClick}
-                title={!isReadOnly && !isCustomAvatar ? "Click to cycle skin" : ""}
+                className="bg-black border border-white/20 w-[80px] h-[80px] shrink-0 overflow-hidden relative group rounded-sm shadow-[0_0_15px_rgba(255,255,255,0.1)] cursor-default"
             >
                 {user ? (
                     <PixelatedCanvas 
@@ -119,20 +106,13 @@ export const StatsDashboard: React.FC<Props> = ({
                         distortionMode="swirl"
                         distortionStrength={1.5}
                         distortionRadius={30}
-                        sampleAverage={true} // High quality
+                        sampleAverage={true}
                         dropoutStrength={0}
                         jitterStrength={0}
                         followSpeed={0.2}
                     />
                 ) : (
                     <div className="w-full h-full bg-gray-900"></div>
-                )}
-                
-                {/* Edit Overlay (Only if not custom and not read only) */}
-                {!isReadOnly && !isCustomAvatar && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        <RefreshCcw size={20} className="text-white" />
-                    </div>
                 )}
             </div>
             

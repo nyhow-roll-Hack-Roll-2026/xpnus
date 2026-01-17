@@ -10,7 +10,7 @@ import { UserProgress, Achievement, User, Category, AchievementProof } from './t
 import { MinecraftButton } from './components/MinecraftButton';
 import { getPersonalizedTip } from './services/geminiService';
 import { LoginModal } from './components/LoginModal';
-import { loginUser, loadUserProgress, saveUserProgress, getStoredUser, logoutUser, updateUserAvatar, updateUserBio, getOtherUserProfile } from './services/authService';
+import { loginUser, loadUserProgress, saveUserProgress, getStoredUser, logoutUser, updateUserBio, getOtherUserProfile } from './services/authService';
 import { DottedGlowBackground } from './components/ui/dotted-glow-background';
 import { createClient } from './src/lib/supabase/client';
 
@@ -148,17 +148,6 @@ const App: React.FC = () => {
       setHasCenteredOnce(false);
   };
 
-  const handleAvatarUpdate = async (newUrl: string) => {
-      if (!user) return;
-      try {
-        const updatedUser = await updateUserAvatar(user.username, newUrl);
-        setUser(updatedUser);
-      } catch (e) {
-        console.error("Failed to update avatar", e);
-        alert("Failed to update profile picture.");
-      }
-  };
-
   const handleBioUpdate = async (newBio: string) => {
       if (!user) return;
       try {
@@ -287,7 +276,7 @@ const App: React.FC = () => {
     }
   };
 
-  // --- CITY MAP LAYOUT ALGORITHM ---
+  // --- HORIZONTAL TREE LAYOUT ALGORITHM ---
   const { nodes, edges, startNodePos } = useMemo(() => {
       // 1. Initialize Nodes Map
       const nodeMap = new Map<string, any>();
@@ -299,90 +288,41 @@ const App: React.FC = () => {
       let rootNode: any = null;
       ACHIEVEMENTS.forEach(ach => {
           const node = nodeMap.get(ach.id);
-          if (ach.type === 'ROOT') rootNode = node; // Explicitly find NUS Start
+          if (ach.type === 'ROOT') rootNode = node; 
           
           if (ach.parentId && nodeMap.has(ach.parentId)) {
               nodeMap.get(ach.parentId).children.push(node);
           }
       });
 
-      // 3. Directional City Layout
-      // General/Root = 0,0
-      // Academic = Up (Negative Y)
-      // Social = Right (Positive X)
-      // Exploration = Left (Negative X)
+      // 3. Horizontal Tree Layout Algorithm
+      const HORIZONTAL_SPACING = 300; // X axis distance between levels
+      const VERTICAL_SPACING = 180;   // Y axis distance between leaf nodes
       
-      const MAIN_AXIS_GAP = 300; // Distance between main nodes
-      const BRANCH_GAP = 200;    // Increased Distance for side branches to prevent overlap
+      let currentLeafY = 0;
 
-      const placeNodes = (node: any, baseX: number, baseY: number, axis: 'X'|'Y'|'ROOT', direction: number) => {
-          node.x = baseX;
-          node.y = baseY;
-
-          if (node.children.length === 0) return;
-
-          // Process children
-          node.children.forEach((child: any, index: number) => {
-             // Determine category direction if it's the root's direct children
-             let childAxis = axis;
-             let childDir = direction;
-             
-             if (node.id === 'nus_start') {
-                 if (child.category === Category.ACADEMIC) {
-                     childAxis = 'Y';
-                     childDir = -1; // UP
-                 } else if (child.category === Category.SOCIAL) {
-                     childAxis = 'X';
-                     childDir = 1; // RIGHT
-                 } else if (child.category === Category.EXPLORATION) {
-                     childAxis = 'X';
-                     childDir = -1; // LEFT
-                 } else {
-                     childAxis = 'Y';
-                     childDir = 1; // Down (fallback)
-                 }
-             }
-
-             // Determine position
-             let nextX = baseX;
-             let nextY = baseY;
-
-             // Logic: Main children follow the main axis. 
-             // Secondary children branch out perpendicular to avoid straight lines overlap.
-             
-             // Simple alternation for visual "City Block" feel
-             const isMainLine = index === 0; 
-             
-             if (childAxis === 'Y') {
-                 // Moving Vertically
-                 if (isMainLine) {
-                     nextY = baseY + (MAIN_AXIS_GAP * childDir);
-                 } else {
-                     // Branch out horizontally
-                     const sideDir = index % 2 === 0 ? 1 : -1;
-                     const branchOffset = Math.ceil(index / 2) * BRANCH_GAP;
-                     nextX = baseX + (branchOffset * sideDir);
-                     nextY = baseY + (BRANCH_GAP * childDir * 0.5); // Slight forward movement too
-                 }
-             } else {
-                 // Moving Horizontally
-                 if (isMainLine) {
-                     nextX = baseX + (MAIN_AXIS_GAP * childDir);
-                 } else {
-                     // Branch out vertically
-                     const sideDir = index % 2 === 0 ? 1 : -1;
-                     const branchOffset = Math.ceil(index / 2) * BRANCH_GAP;
-                     nextY = baseY + (branchOffset * sideDir);
-                     nextX = baseX + (BRANCH_GAP * childDir * 0.5);
-                 }
-             }
-
-             placeNodes(child, nextX, nextY, childAxis, childDir);
-          });
+      // Recursive function to layout nodes
+      const layoutNode = (node: any, depth: number) => {
+          node.x = depth * HORIZONTAL_SPACING;
+          
+          if (node.children.length === 0) {
+              // It's a leaf node, assign it the next available Y slot
+              node.y = currentLeafY;
+              currentLeafY += VERTICAL_SPACING;
+          } else {
+              // It's a parent node, process all children first (Post-order traversal for Y)
+              node.children.forEach((child: any) => layoutNode(child, depth + 1));
+              
+              // Place parent vertically centered relative to its children
+              const firstChildY = node.children[0].y;
+              const lastChildY = node.children[node.children.length - 1].y;
+              node.y = (firstChildY + lastChildY) / 2;
+          }
       };
 
       if (rootNode) {
-          placeNodes(rootNode, 0, 0, 'ROOT', 0);
+          // Start layout from root at depth 0
+          layoutNode(rootNode, 0);
       }
 
       const finalNodes = Array.from(nodeMap.values());
@@ -592,7 +532,6 @@ const App: React.FC = () => {
                 progress={displayProgress} 
                 user={displayUser} 
                 onLogout={handleLogout} 
-                onUpdateAvatar={handleAvatarUpdate}
                 onUpdateBio={handleBioUpdate}
                 isReadOnly={isReadOnly}
                 onBack={handleReturnToMyProfile}
@@ -608,7 +547,6 @@ const App: React.FC = () => {
                         progress={displayProgress} 
                         user={displayUser} 
                         onLogout={handleLogout} 
-                        onUpdateAvatar={handleAvatarUpdate}
                         onUpdateBio={handleBioUpdate}
                         isReadOnly={isReadOnly}
                         onBack={handleReturnToMyProfile}
@@ -770,8 +708,9 @@ const App: React.FC = () => {
                             const endX = edge.targetX + 100; 
                             const endY = edge.targetY + ICON_OFFSET + 100; 
                             
-                            // Simple Line or L-shape depending on positions to look more like streets
-                            const pathData = `M ${startX} ${startY} L ${endX} ${endY}`;
+                            // Orthogonal routing: horizontal → vertical → horizontal (L-shape)
+                            const midX = (startX + endX) / 2;
+                            const pathData = `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
 
                             return (
                                 <path 
