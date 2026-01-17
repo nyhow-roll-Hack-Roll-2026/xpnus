@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Lock } from 'lucide-react';
 import { Achievement, AchievementType } from '../types';
-import { MinecraftButton } from '../src/components/MinecraftButton';
+import { MinecraftButton } from './MinecraftButton';
 import { getAchievementLore } from '../services/geminiService';
 import { AchievementIcon } from './AchievementIcon';
 

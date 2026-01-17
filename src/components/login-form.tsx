@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { MinecraftButton } from '@/components/MinecraftButton'
+import { MinecraftButton } from '../../components/MinecraftButton'
 
 export function LoginForm({ className, onToggleView, ...props }: React.ComponentPropsWithoutRef<'div'> & { onToggleView?: () => void }) {
   const [email, setEmail] = useState('')
