@@ -4,7 +4,7 @@ import { AchievementIcon } from './components/AchievementIcon';
 import { AchievementModal } from './components/AchievementModal';
 import { StatsDashboard } from './components/StatsDashboard';
 import { UserProgress, Achievement, User, Category } from './types';
-import { MinecraftButton } from './src/components/MinecraftButton';
+import { MinecraftButton } from './components/MinecraftButton';
 import { getPersonalizedTip } from './services/geminiService';
 import { LoginForm } from './src/components/login-form';
 import { SignUpForm } from './src/components/sign-up-form';
@@ -23,14 +23,17 @@ const App: React.FC = () => {
     const [progress, setProgress] = useState<UserProgress>({ unlockedIds: ['nus_start'], totalXp: 0 });
     const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
     const [tip, setTip] = useState<string>("Loading tip...");
-    const [scale, setScale] = useState(1);
     const [filterCategory, setFilterCategory] = useState<Category | 'ALL'>('ALL');
+    const [showMobileStats, setShowMobileStats] = useState(false);
 
-    // --- Map Panning State ---
+    // --- Viewport State (Infinite Canvas) ---
     const mapContainerRef = useRef<HTMLDivElement>(null);
+    const [scale, setScale] = useState(1);
+    const [pan, setPan] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
-    const [startPan, setStartPan] = useState({ x: 0, y: 0 });
-    const [scrollStart, setScrollStart] = useState({ left: 0, top: 0 });
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 }); // Mouse position at start
+    const [panStart, setPanStart] = useState({ x: 0, y: 0 });   // Pan value at start
+    const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
 
     // 1. Check for existing session on mount and listen to auth changes
     useEffect(() => {
@@ -237,21 +240,20 @@ const App: React.FC = () => {
     const handleMouseDown = (e: React.MouseEvent) => {
         if (!mapContainerRef.current) return;
         setIsDragging(true);
-        setStartPan({ x: e.clientX, y: e.clientY });
-        setScrollStart({
-            left: mapContainerRef.current.scrollLeft,
-            top: mapContainerRef.current.scrollTop
-        });
+        setDragStart({ x: e.clientX, y: e.clientY });
+        setPanStart({ x: pan.x, y: pan.y });
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
-        if (!isDragging || !mapContainerRef.current) return;
+        if (!isDragging) return;
         e.preventDefault();
-        const dx = e.clientX - startPan.x;
-        const dy = e.clientY - startPan.y;
+        const dx = e.clientX - dragStart.x;
+        const dy = e.clientY - dragStart.y;
 
-        mapContainerRef.current.scrollLeft = scrollStart.left - dx;
-        mapContainerRef.current.scrollTop = scrollStart.top - dy;
+        setPan({
+            x: panStart.x + dx,
+            y: panStart.y + dy
+        });
     };
 
     const handleMouseUp = () => {
@@ -354,19 +356,20 @@ const App: React.FC = () => {
                     {/* Canvas (Tree Visualization) */}
                     <main
                         ref={mapContainerRef}
-                        className={`flex-1 overflow-auto bg-black/20 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                        className={`flex-1 overflow-hidden bg-black/20 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
                         onMouseLeave={handleMouseUp}
                     >
                         <div
-                            className="origin-top-left relative"
+                            className="absolute"
                             style={{
-                                transform: `scale(${scale})`,
+                                transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+                                transformOrigin: '0 0',
                                 width: containerWidth,
                                 height: containerHeight,
-                                padding: '80px' // Initial offset
+                                padding: '80px'
                             }}
                         >
                             {/* 1. Connections Layer (SVG) */}
@@ -460,15 +463,17 @@ const App: React.FC = () => {
             </div>
 
             {/* Modals */}
-            {selectedAchievement && (
-                <AchievementModal
-                    achievement={selectedAchievement}
-                    onClose={() => setSelectedAchievement(null)}
-                    unlocked={progress.unlockedIds.includes(selectedAchievement.id)}
-                    onUnlock={handleUnlock}
-                />
-            )}
-        </div>
+            {
+                selectedAchievement && (
+                    <AchievementModal
+                        achievement={selectedAchievement}
+                        onClose={() => setSelectedAchievement(null)}
+                        unlocked={progress.unlockedIds.includes(selectedAchievement.id)}
+                        onUnlock={handleUnlock}
+                    />
+                )
+            }
+        </div >
     );
 };
 

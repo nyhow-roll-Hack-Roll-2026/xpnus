@@ -8,6 +8,29 @@
       href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
       rel="stylesheet"
     />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              pixel: ['"VT323"', "monospace"],
+            },
+            colors: {
+              mc: {
+                bg: "#0a0a0a", // Modern Dark
+                panel: "#171717", // Dark Panel
+                border: "#262626", // Dark border
+                green: "#5D8D42", // Success green
+                darkGreen: "#41622d",
+                yellow: "#FFFF55", // Minecraft Yellow text
+                gold: "#D4AF37", // Royal Gold
+                goldDim: "#8C7321", // Dim Gold
+              },
+            },
+          },
+        },
+      };
+    </script>
     <style>
       /* Custom Scrollbar for Webkit */
       ::-webkit-scrollbar {
@@ -15,17 +38,59 @@
         height: 12px;
       }
       ::-webkit-scrollbar-track {
-        background: #252525;
+        background: #0a0a0a;
       }
       ::-webkit-scrollbar-thumb {
-        background: #8b8b8b;
-        border: 2px solid #373737;
+        background: #262626;
+        border: 2px solid #0a0a0a;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #c6c6c6;
+        background: #404040;
       }
       body {
         image-rendering: pixelated;
+      }
+
+      /* Modern Background Patterns */
+      .bg-grid-pattern {
+        background-image:
+          linear-gradient(to right, #ffffff05 1px, transparent 1px),
+          linear-gradient(to bottom, #ffffff05 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+
+      .bg-dot-pattern {
+        background-image: radial-gradient(#ffffff15 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+
+      /* Gold Glow Animation */
+      @keyframes gold-pulse {
+        0%,
+        100% {
+          box-shadow:
+            0 0 5px #d4af37,
+            inset 0 0 5px #d4af37;
+          border-color: #d4af37;
+        }
+        50% {
+          box-shadow:
+            0 0 15px #d4af37,
+            inset 0 0 10px #d4af37;
+          border-color: #fff;
+        }
+      }
+      .animate-gold-pulse {
+        animation: gold-pulse 3s infinite;
+      }
+
+      /* Utility to hide scrollbars */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
       }
     </style>
     <script type="importmap">
