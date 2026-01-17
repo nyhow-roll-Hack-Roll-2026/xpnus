@@ -22,6 +22,29 @@ import { createClient } from './src/lib/supabase/client';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabase = supabaseUrl ? createClient() : null;
 
+const Clock: React.FC = () => {
+    const [time, setTime] = useState(new Date());
+
+    useEffect(() => {
+        const timer = setInterval(() => setTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <p className="text-sm text-gray-200 font-mono tracking-wide leading-none">
+            {time.toLocaleString('en-SG', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            })}
+        </p>
+    );
+};
+
 const App: React.FC = () => {
     // --- Auth State ---
     const [user, setUser] = useState<User | null>(null);
@@ -58,6 +81,7 @@ const App: React.FC = () => {
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 }); // Mouse position at start
     const [panStart, setPanStart] = useState({ x: 0, y: 0 });   // Pan value at start
     const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
+    const lastPinchDistance = useRef<number | null>(null);
 
     // --- Hover Tooltip State ---
     const [hoveredProof, setHoveredProof] = useState<{ x: number, y: number, proof: AchievementProof, title: string } | null>(null);
@@ -558,20 +582,99 @@ const App: React.FC = () => {
             const touch = e.touches[0];
             setDragStart({ x: touch.clientX, y: touch.clientY });
             setPanStart({ x: pan.x, y: pan.y });
+        } else if (e.touches.length === 2) {
+            // Pinch Start
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            lastPinchDistance.current = dist;
         }
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
-        if (!isDragging) return;
-        if (e.touches.length === 1) {
+        // 1. Single Touch Drag
+        if (e.touches.length === 1 && isDragging) {
             const touch = e.touches[0];
             const dx = touch.clientX - dragStart.x;
             const dy = touch.clientY - dragStart.y;
             setPan({ x: panStart.x + dx, y: panStart.y + dy });
+        } 
+        // 2. Pinch Zoom
+        else if (e.touches.length === 2 && lastPinchDistance.current !== null) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+
+            // Calculate change ratio
+            const delta = dist - lastPinchDistance.current;
+            const zoomSensitivity = 0.002; // Adjust for speed
+            const zoomFactor = 1 + (delta * zoomSensitivity);
+
+            let newScale = scale * zoomFactor;
+            newScale = Math.max(0.2, Math.min(3, newScale));
+
+            // Zoom towards center of screen to feel natural
+            if (mapContainerRef.current) {
+                const { clientWidth, clientHeight } = mapContainerRef.current;
+                
+                // Current center in world coordinates
+                const centerX = (clientWidth / 2 - pan.x) / scale;
+                const centerY = (clientHeight / 2 - pan.y) / scale;
+
+                // New Pan to keep center in same place
+                const newPanX = (clientWidth / 2) - (centerX * newScale);
+                const newPanY = (clientHeight / 2) - (centerY * newScale);
+
+                setPan({ x: newPanX, y: newPanY });
+            }
+
+            setScale(newScale);
+            lastPinchDistance.current = dist;
         }
     };
 
-    const handleTouchEnd = () => { setIsDragging(false); };
+    const handleTouchEnd = () => { 
+        setIsDragging(false);
+        lastPinchDistance.current = null;
+    };
+
+    // --- Wheel Handler (Trackpad) ---
+    // Note: Trackpad pinch usually triggers wheel event with ctrlKey=true
+    const handleWheel = (e: React.WheelEvent) => {
+        // Pinch Zoom
+        if (e.ctrlKey) {
+            e.preventDefault();
+            const zoomSensitivity = -0.01;
+            const zoomFactor = 1 + (e.deltaY * zoomSensitivity);
+
+            let newScale = scale * zoomFactor;
+            newScale = Math.max(0.2, Math.min(3, newScale));
+
+            if (mapContainerRef.current) {
+                const rect = mapContainerRef.current.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                // World pos under mouse (Before Zoom)
+                const worldX = (mouseX - pan.x) / scale;
+                const worldY = (mouseY - pan.y) / scale;
+
+                // New Pan to keep world point under mouse (After Zoom)
+                const newPanX = mouseX - (worldX * newScale);
+                const newPanY = mouseY - (worldY * newScale);
+
+                setPan({ x: newPanX, y: newPanY });
+            }
+            setScale(newScale);
+        } else {
+            // Pan (Scroll)
+            const newPanX = pan.x - e.deltaX;
+            const newPanY = pan.y - e.deltaY;
+            setPan({ x: newPanX, y: newPanY });
+        }
+    };
 
     // --- RENDER ---
 
@@ -640,12 +743,12 @@ const App: React.FC = () => {
     }
 
     return (
-        <div className="h-screen w-screen flex flex-col bg-[#1a1a1a] text-gray-100 relative overflow-hidden">
+        <div className="h-screen w-screen flex flex-col bg-[#06011a] text-gray-100 relative overflow-hidden">
 
             {/* Background with Dotted Glow */}
-            <div className="absolute inset-0 z-0 bg-[#1a1a1a]">
+            <div className="absolute inset-0 z-0 bg-[#06011a]">
                 <DottedGlowBackground
-                    className="opacity-50"
+                    className="opacity-80"
                     gap={30}
                     radius={1.5}
                     colorDarkVar="#333"
@@ -655,7 +758,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Header */}
-            <header className="relative z-50 bg-black/60 backdrop-blur-md border-b border-mc-gold/30 p-4 flex justify-between items-center shadow-lg">
+            <header className="relative z-0 bg-black/60 backdrop-blur-md border-b border-mc-gold/30 p-3 flex justify-between items-center shadow-lg">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => setShowMobileStats(!showMobileStats)}
@@ -674,9 +777,10 @@ const App: React.FC = () => {
                     </div>
                 </div>
                 <div className="flex gap-3">
-                    <div className="text-right hidden md:block">
-                        <p className="text-xs text-mc-goldDim uppercase tracking-widest">Current Session</p>
-                        <p className="text-xl text-gray-200">Year {user?.year}, Sem 1</p>
+                    <div className="text-right hidden md:block space-y-0.5">
+                        <p className="text-[10px] text-mc-gold uppercase tracking-widest opacity-100">Current Session</p>
+                        <p className="text-xl text-gray-200 tracking-wide leading-none">Year {user?.year}, Sem 1</p>
+                        <Clock />
                     </div>
 
                     <MinecraftButton onClick={() => setShowSearch(true)} className="flex items-center gap-2 h-13" variant="default">
@@ -699,7 +803,6 @@ const App: React.FC = () => {
 
                     <MinecraftButton onClick={() => setShowInventory(true)} className="hidden sm:flex items-center gap-2 h-13" variant="green">
                         <Package size={20} />
-                        INVENTORY
                     </MinecraftButton>
                 </div>
             </header>
@@ -887,9 +990,10 @@ const App: React.FC = () => {
                         onTouchStart={handleTouchStart}
                         onTouchMove={handleTouchMove}
                         onTouchEnd={handleTouchEnd}
+                        onWheel={handleWheel}
                     >
                         <div
-                            className="absolute top-0 left-0 origin-top-left transition-transform duration-75 ease-out will-change-transform"
+                            className={`absolute top-0 left-0 origin-top-left transition-transform ease-out will-change-transform ${isDragging ? 'duration-0' : 'duration-700'}`}
                             style={{
                                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
                             }}
