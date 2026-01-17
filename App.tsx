@@ -720,7 +720,7 @@ const App: React.FC = () => {
 
                     {/* Loading Text */}
                     <div className="mb-4">
-                        <h2 className="text-2xl font-bold text-mc-gold mb-2 animate-pulse">
+                        <h2 className="text-3xl text-mc-gold mb-5 animate-pulse">
                             Loading Your World...
                         </h2>
                         <div className="flex items-center justify-center gap-1">
@@ -731,10 +731,10 @@ const App: React.FC = () => {
                     </div>
 
                     {/* Game Tip */}
-                    <div className="max-w-md mx-auto mt-8 p-4 bg-black/40 border-2 border-mc-gold/30 rounded backdrop-blur-sm">
-                        <p className="text-mc-goldDim text-sm flex items-center justify-center gap-2">
-                            <span className="text-mc-green">💡</span>
-                            <span className="text-gray-300">{loadingTip}</span>
+                    <div className="sm:max-w-lg max-w-sm mx-auto mt-8 p-4 bg-black/40 border-2 border-mc-gold/30 rounded backdrop-blur-sm">
+                        <p className="text-mc-goldDim  text-lg flex items-center justify-center gap-2">
+                            <span className="text-gray-300 min-w-fit">💡</span>
+                            <span className="text-gray-300 leading-tight">{loadingTip}</span>
                         </p>
                     </div>
                 </div>
@@ -769,9 +769,10 @@ const App: React.FC = () => {
 
                     <div>
                         <h1 className="text-2xl md:text-4xl text-white drop-shadow-md tracking-wider flex items-center gap-2">
-                            <span className="text-mc-gold">❖</span> NUS ACHIEVEMENTS
+                            <span className="text-mc-gold">❖</span>XP NUS
+                            <span className='hidden sm:flex'>ACHIEVEMENTS</span>
                         </h1>
-                        <p className="text-gray-400 text-sm md:text-lg mt-1 hidden md:flex items-center gap-2">
+                        <p className="text-gray-400 text-xl mt-1 hidden lg:flex items-center gap-2">
                             <span className="text-mc-green animate-pulse">●</span> {tip}
                         </p>
                     </div>
@@ -801,7 +802,7 @@ const App: React.FC = () => {
                         )}
                     </MinecraftButton>
 
-                    <MinecraftButton onClick={() => setShowInventory(true)} className="hidden sm:flex items-center gap-2 h-13" variant="green">
+                    <MinecraftButton onClick={() => setShowInventory(true)} className="items-center gap-2 h-13" variant="green">
                         <Package size={20} />
                     </MinecraftButton>
                 </div>
@@ -826,15 +827,15 @@ const App: React.FC = () => {
                 {showMobileStats && (
                     <div className="fixed inset-0 z-[100] lg:hidden flex">
                         {/* Backdrop */}
-                        <div 
+                        <div
                             className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
                             onClick={() => setShowMobileStats(false)}
                         ></div>
-                        
+
                         {/* Sidebar */}
                         <aside className="relative w-80 h-full bg-neutral-900 border-r border-mc-gold/50 shadow-2xl animate-in slide-in-from-left duration-300 flex flex-col">
                             <div className="p-4 border-b border-white/10 flex justify-end">
-                                <button 
+                                <button
                                     onClick={() => setShowMobileStats(false)}
                                     className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded"
                                 >
@@ -861,11 +862,11 @@ const App: React.FC = () => {
 
                     {/* Filter Overlay */}
                     <div className="absolute top-4 left-0 w-full px-4 z-30 pointer-events-none overflow-x-auto no-scrollbar">
-                        <div className="flex gap-2 min-w-max pb-2 pointer-events-none">
+                        <div className="flex flex-col md:flex-row gap-2 min-w-max pb-2 pointer-events-none">
                             <MinecraftButton
                                 variant={filterCategory === 'ALL' ? 'green' : 'default'}
                                 onClick={() => setFilterCategory('ALL')}
-                                className="text-xs sm:text-sm px-3 py-1 pointer-events-auto"
+                                className="text-sm px-3 py-1 pointer-events-auto w-[120px] md:w-auto"
                             >
                                 ALL
                             </MinecraftButton>
@@ -874,7 +875,7 @@ const App: React.FC = () => {
                                     key={cat}
                                     variant={filterCategory === cat ? 'green' : 'default'}
                                     onClick={() => setFilterCategory(cat)}
-                                    className="text-xs sm:text-sm px-3 py-1 pointer-events-auto"
+                                    className="text-sm md:text-lg px-3 py-1 w-[120px] pointer-events-auto md:w-auto"
                                 >
                                     {cat.toUpperCase()}
                                 </MinecraftButton>
