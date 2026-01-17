@@ -15,18 +15,15 @@
             },
             colors: {
               mc: {
-                bg: '#252525', // Dark stone
-                panel: '#C6C6C6', // Light gray GUI
-                panelDark: '#8B8B8B', // Darker gray GUI shadow
-                border: '#373737', // Dark border
+                bg: '#0a0a0a', // Modern Dark
+                panel: '#171717', // Dark Panel
+                border: '#262626', // Dark border
                 green: '#5D8D42', // Success green
                 darkGreen: '#41622d',
                 yellow: '#FFFF55', // Minecraft Yellow text
+                gold: '#D4AF37', // Royal Gold
+                goldDim: '#8C7321', // Dim Gold
               }
-            },
-            backgroundImage: {
-              'dirt': "url('https://www.transparenttextures.com/patterns/dark-matter.png')", // Subtle texture
-              'stone': "url('https://www.transparenttextures.com/patterns/black-scales.png')",
             }
           }
         }
@@ -39,17 +36,47 @@
         height: 12px;
       }
       ::-webkit-scrollbar-track {
-        background: #252525; 
+        background: #0a0a0a; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #8B8B8B; 
-        border: 2px solid #373737;
+        background: #262626; 
+        border: 2px solid #0a0a0a;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #C6C6C6; 
+        background: #404040; 
       }
       body {
         image-rendering: pixelated;
+      }
+      
+      /* Modern Background Patterns */
+      .bg-grid-pattern {
+        background-image: linear-gradient(to right, #ffffff05 1px, transparent 1px),
+                          linear-gradient(to bottom, #ffffff05 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+      
+      .bg-dot-pattern {
+        background-image: radial-gradient(#ffffff15 1px, transparent 1px);
+        background-size: 24px 24px;
+      }
+
+      /* Gold Glow Animation */
+      @keyframes gold-pulse {
+        0%, 100% { box-shadow: 0 0 5px #D4AF37, inset 0 0 5px #D4AF37; border-color: #D4AF37; }
+        50% { box-shadow: 0 0 15px #D4AF37, inset 0 0 10px #D4AF37; border-color: #FFF; }
+      }
+      .animate-gold-pulse {
+        animation: gold-pulse 3s infinite;
+      }
+
+      /* Utility to hide scrollbars */
+      .no-scrollbar::-webkit-scrollbar {
+          display: none;
+      }
+      .no-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
       }
     </style>
   <script type="importmap">
@@ -64,9 +91,10 @@
   }
 }
 </script>
+<link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-mc-bg text-white font-pixel antialiased overflow-hidden">
+  <body class="bg-mc-bg text-gray-200 font-pixel antialiased overflow-hidden">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+  <script type="module" src="/index.tsx"></script>
+</body>
 </html>

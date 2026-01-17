@@ -1,53 +1,42 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
-import { AchievementType } from '../types';
+import { AchievementType, Category } from '../types';
+import { CATEGORY_COLORS } from '../constants';
 import { CardContainer, CardBody, CardItem } from './ui/3d-card';
 
 interface Props {
   iconName: string;
   type: AchievementType;
+  category: Category;
   unlocked: boolean;
   size?: number;
 }
 
-export const AchievementIcon: React.FC<Props> = ({ iconName, type, unlocked, size = 32 }) => {
+export const AchievementIcon: React.FC<Props> = ({ iconName, type, category, unlocked, size = 32 }) => {
   const LucideIcon = (Icons as any)[iconName] || Icons.HelpCircle;
 
-  // Configuration for 3D Bevel Styles
-  const styles = {
-    locked: {
-      bg: '#8B8B8B',     // Stone Grey
-      light: '#C6C6C6',  // Light Stone
-      dark: '#373737'    // Dark Stone/Shadow
-    },
-    root: {
-      bg: '#5D8D42',     // Grass Green
-      light: '#7FBC5D',  // Light Grass
-      dark: '#2F4721'    // Dark Dirt
-    },
-    task: {
-      bg: '#D9A334',     // Gold
-      light: '#F7D46D',
-      dark: '#8C6212'
-    },
-    goal: {
-      bg: '#D9A334',
-      light: '#F7D46D',
-      dark: '#8C6212'
-    },
-    challenge: {
-      bg: '#8F3985',     // Purple
-      light: '#C965BE',
-      dark: '#541A4D'    // Dark Purple
-    }
+  // 1. Determine Base Color based on Category
+  const categoryColor = CATEGORY_COLORS[category] || '#7E7E7E';
+
+  // 2. Define Styles based on state
+  // If locked: Stone/Gray look
+  // If unlocked: Use the category color with light/dark variants
+  
+  const getCategoryStyles = (baseColor: string) => {
+      return {
+          bg: baseColor,
+          light: adjustColor(baseColor, 40), // lighter
+          dark: adjustColor(baseColor, -40)  // darker
+      };
   };
 
-  let currentStyle = styles.locked;
-  if (unlocked) {
-    if (type === AchievementType.ROOT) currentStyle = styles.root;
-    else if (type === AchievementType.CHALLENGE) currentStyle = styles.challenge;
-    else currentStyle = styles.task;
-  }
+  const lockedStyle = {
+      bg: '#3f3f46',     // Zinc 700
+      light: '#71717a',  // Zinc 500
+      dark: '#27272a'    // Zinc 800
+  };
+
+  const currentStyle = unlocked ? getCategoryStyles(categoryColor) : lockedStyle;
 
   const isGoal = type === AchievementType.GOAL;
   const isChallenge = type === AchievementType.CHALLENGE;
@@ -63,21 +52,18 @@ export const AchievementIcon: React.FC<Props> = ({ iconName, type, unlocked, siz
         <CardBody className="relative w-full h-full">
             
             {/* 1. Shadow Layer */}
-            {/* We apply the static rotation/offset here in CSS or wrapper, keeping CardItem for depth */}
             <CardItem translateZ="-20" className="absolute inset-0 w-full h-full">
                  <div 
-                    className="w-full h-full bg-black opacity-40" 
+                    className="w-full h-full bg-black opacity-60" 
                     style={{ 
                         borderRadius: borderRadius,
-                        // Static transforms for the shape
-                        transform: isChallenge ? 'rotate(45deg) scale(0.85) translate(4px, 4px)' : 'translate(8px, 8px)'
+                        transform: isChallenge ? 'rotate(45deg) scale(0.85) translate(4px, 4px)' : 'translate(6px, 6px)'
                     }}
                 />
             </CardItem>
 
-            {/* 2. Main Frame Layer - Pops out */}
+            {/* 2. Main Frame Layer */}
             <CardItem translateZ="30" className="w-full h-full">
-                 {/* Wrapper for static rotation (Diamond shape) */}
                  <div 
                     className="w-full h-full"
                     style={{ transform: isChallenge ? 'rotate(45deg) scale(0.85)' : 'none' }}
@@ -85,8 +71,8 @@ export const AchievementIcon: React.FC<Props> = ({ iconName, type, unlocked, siz
                     <div 
                         className={`
                             relative flex items-center justify-center w-full h-full 
-                            border-4 
-                            ${!unlocked ? 'grayscale-[0.5]' : ''}
+                            border-4 transition-colors duration-300
+                            ${!unlocked ? 'grayscale-[0.8]' : ''}
                         `}
                         style={{
                             backgroundColor: currentStyle.bg,
@@ -95,16 +81,15 @@ export const AchievementIcon: React.FC<Props> = ({ iconName, type, unlocked, siz
                             borderBottomColor: currentStyle.dark,
                             borderRightColor: currentStyle.dark,
                             borderRadius: borderRadius,
-                            boxShadow: `inset 0 0 20px rgba(0,0,0,0.25)`
+                            boxShadow: `inset 0 0 15px rgba(0,0,0,0.3)`
                         }}
                     >
-                        {/* Inner Decorative Inset */}
+                        {/* Inner Decorative Inset for non-goals */}
                         {!isGoal && (
                             <div className="absolute inset-1 border-2 border-black/10 pointer-events-none" style={{ borderRadius: '2px' }}></div>
                         )}
 
-                        {/* 3. Icon Layer - Pops out even more */}
-                        {/* We need to counter-rotate if it's a challenge so the icon stays upright */}
+                        {/* 3. Icon Layer */}
                         <CardItem 
                             translateZ="50" 
                             className="relative z-10 flex items-center justify-center"
@@ -112,11 +97,11 @@ export const AchievementIcon: React.FC<Props> = ({ iconName, type, unlocked, siz
                             <div style={{ transform: isChallenge ? 'rotate(-45deg)' : 'none' }}>
                                 <LucideIcon 
                                     size={size} 
-                                    color={unlocked ? '#FFFFFF' : '#444444'}
-                                    strokeWidth={unlocked ? 3 : 2.5}
+                                    color={unlocked ? '#FFFFFF' : '#a1a1aa'}
+                                    strokeWidth={unlocked ? 3 : 2}
                                     className={`
                                         filter drop-shadow-md transition-all duration-300
-                                        ${unlocked ? 'drop-shadow-[2px_2px_0px_rgba(0,0,0,0.6)]' : ''}
+                                        ${unlocked ? 'drop-shadow-[2px_2px_0px_rgba(0,0,0,0.4)]' : ''}
                                     `}
                                 />
                             </div>
@@ -129,7 +114,7 @@ export const AchievementIcon: React.FC<Props> = ({ iconName, type, unlocked, siz
             {unlocked && (
                 <CardItem translateZ="60" className="absolute top-0 right-0 pointer-events-none">
                     <div 
-                        className="w-3 h-3 bg-white opacity-20 rounded-full blur-[1px]"
+                        className="w-3 h-3 bg-white opacity-40 rounded-full blur-[2px]"
                         style={{ transform: isChallenge ? 'translate(-12px, 12px)' : 'translate(-6px, 6px)' }}
                     />
                 </CardItem>
@@ -139,3 +124,8 @@ export const AchievementIcon: React.FC<Props> = ({ iconName, type, unlocked, siz
     </CardContainer>
   );
 };
+
+// Helper to lighten/darken hex color
+function adjustColor(color: string, amount: number) {
+    return '#' + color.replace(/^#/, '').replace(/../g, color => ('0'+Math.min(255, Math.max(0, parseInt(color, 16) + amount)).toString(16)).substr(-2));
+}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Menu, X, Compass, Plus, Minus } from 'lucide-react'; 
 import { ACHIEVEMENTS } from './constants';
 import { AchievementIcon } from './components/AchievementIcon';
 import { AchievementModal } from './components/AchievementModal';
@@ -8,6 +9,7 @@ import { MinecraftButton } from './components/MinecraftButton';
 import { getPersonalizedTip } from './services/geminiService';
 import { LoginModal } from './components/LoginModal';
 import { loginUser, loadUserProgress, saveUserProgress, getStoredUser, logoutUser, updateUserAvatar } from './services/authService';
+import { DottedGlowBackground } from './components/ui/dotted-glow-background';
 
 const App: React.FC = () => {
   // --- Auth State ---
@@ -18,14 +20,17 @@ const App: React.FC = () => {
   const [progress, setProgress] = useState<UserProgress>({ unlockedIds: ['nus_start'], totalXp: 0 });
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
   const [tip, setTip] = useState<string>("Loading tip...");
-  const [scale, setScale] = useState(1);
   const [filterCategory, setFilterCategory] = useState<Category | 'ALL'>('ALL');
+  const [showMobileStats, setShowMobileStats] = useState(false);
 
-  // --- Map Panning State ---
+  // --- Viewport State (Infinite Canvas) ---
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [startPan, setStartPan] = useState({ x: 0, y: 0 });
-  const [scrollStart, setScrollStart] = useState({ left: 0, top: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 }); // Mouse position at start
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });   // Pan value at start
+  const [hasCenteredOnce, setHasCenteredOnce] = useState(false);
   
   // 1. Check for existing session on mount
   useEffect(() => {
@@ -61,8 +66,8 @@ const App: React.FC = () => {
     getPersonalizedTip(progress.unlockedIds.length).then(setTip);
   }, [progress.unlockedIds.length]);
 
-  const handleLogin = async (username: string, avatarUrl: string) => {
-      const loggedUser = await loginUser(username, avatarUrl);
+  const handleLogin = async (username: string, avatarUrl: string, isCustomAvatar: boolean) => {
+      const loggedUser = await loginUser(username, avatarUrl, isCustomAvatar);
       await handlePostLogin(loggedUser);
   };
 
@@ -70,6 +75,8 @@ const App: React.FC = () => {
       logoutUser();
       setUser(null);
       setProgress({ unlockedIds: ['nus_start'], totalXp: 0 });
+      setShowMobileStats(false);
+      setHasCenteredOnce(false);
   };
 
   const handleAvatarUpdate = async (newUrl: string) => {
@@ -109,12 +116,12 @@ const App: React.FC = () => {
     setSelectedAchievement(null);
   };
 
-  // --- Tree Layout Algorithm ---
-  const { nodes, edges, containerWidth, containerHeight } = useMemo(() => {
-      // 1. Initialize Nodes
+  // --- Tree Layout Algorithm (Contour-based / Reingold-Tilford inspired) ---
+  const { nodes, edges, startNodePos } = useMemo(() => {
+      // 1. Initialize Nodes Map
       const nodeMap = new Map<string, any>();
       ACHIEVEMENTS.forEach(ach => {
-          nodeMap.set(ach.id, { ...ach, children: [], x: 0, y: 0 });
+          nodeMap.set(ach.id, { ...ach, children: [], relY: 0, x: 0, y: 0 });
       });
 
       // 2. Build Hierarchy
@@ -129,39 +136,130 @@ const App: React.FC = () => {
       });
 
       // 3. Layout Configuration
-      const X_GAP = 280; // Horizontal distance between columns
-      const Y_GAP = 140; // Vertical distance between leaf nodes
-      let currentY = 0;
+      const NODE_HEIGHT = 120; // Visual height of node + label
+      const X_GAP = 350;       // Horizontal spacing
+      const Y_GAP = 60;        // Minimum vertical gap between subtrees
 
-      // 4. Recursive Positioning (DFS)
-      const traverse = (node: any, depth: number) => {
+      // 4. Contour Calculation (Post-Order Traversal)
+      // Calculates the shape (top/bottom contours) of each subtree and assigns relative Y positions
+      const layoutNode = (node: any): { top: number[], bot: number[] } => {
           if (node.children.length === 0) {
-              // Leaf node
-              node.x = depth * X_GAP;
-              node.y = currentY;
-              currentY += Y_GAP;
-              return;
+              return {
+                  top: [-NODE_HEIGHT / 2],
+                  bot: [NODE_HEIGHT / 2]
+              };
           }
 
-          // Process children first to determine parent's Y
-          node.children.forEach((child: any) => traverse(child, depth + 1));
+          const childContours = node.children.map((child: any) => layoutNode(child));
 
-          node.x = depth * X_GAP;
-          const firstChild = node.children[0];
-          const lastChild = node.children[node.children.length - 1];
-          
-          // Center parent vertically relative to its children
-          node.y = (firstChild.y + lastChild.y) / 2;
+          // Merge children vertically
+          let cumulativeBot: number[] = [];
+          const childYOffsets: number[] = [];
+
+          childContours.forEach((curr, i) => {
+              if (i === 0) {
+                  childYOffsets.push(0);
+                  cumulativeBot = [...curr.bot];
+              } else {
+                  let shift = -Infinity;
+                  
+                  // Calculate required shift to avoid overlap with the cumulative bottom of previous siblings
+                  const overlapDepth = Math.min(cumulativeBot.length, curr.top.length);
+                  
+                  for (let d = 0; d < overlapDepth; d++) {
+                      // Ensure: prevBottom + GAP <= currTop + shift
+                      const required = cumulativeBot[d] - curr.top[d] + Y_GAP;
+                      if (required > shift) shift = required;
+                  }
+                  
+                  // Default gap if no depth overlap (rare, but handles shallow siblings)
+                  if (overlapDepth === 0) {
+                      shift = cumulativeBot[0] - curr.top[0] + Y_GAP;
+                  }
+                  
+                  // Safety Check
+                  if (shift === -Infinity) shift = Y_GAP;
+
+                  childYOffsets.push(shift);
+
+                  // Update cumulative bottom contour
+                  const maxDepth = Math.max(cumulativeBot.length, curr.bot.length);
+                  for (let d = 0; d < maxDepth; d++) {
+                      const oldVal = cumulativeBot[d] ?? -Infinity;
+                      const newVal = (curr.bot[d] ?? -Infinity) + shift;
+                      cumulativeBot[d] = Math.max(oldVal, newVal);
+                  }
+              }
+          });
+
+          // Center parent relative to the block of children
+          const firstChildY = childYOffsets[0];
+          const lastChildY = childYOffsets[childYOffsets.length - 1];
+          const childrenCenter = (firstChildY + lastChildY) / 2;
+
+          // Store relative Y (offset from parent center)
+          node.children.forEach((child: any, i: number) => {
+              child.relY = childYOffsets[i] - childrenCenter;
+          });
+
+          // Construct Parent Contour (Depth 0 is Parent, Depth 1+ is Children)
+          const myTop = [-NODE_HEIGHT / 2];
+          const myBot = [NODE_HEIGHT / 2];
+
+          childContours.forEach((curr, i) => {
+              const offset = node.children[i].relY;
+              
+              // Merge Child Top Contour
+              curr.top.forEach((val, d) => {
+                  const targetD = d + 1;
+                  const absVal = val + offset;
+                  if (myTop[targetD] === undefined || absVal < myTop[targetD]) {
+                      myTop[targetD] = absVal;
+                  }
+              });
+
+              // Merge Child Bottom Contour
+              curr.bot.forEach((val, d) => {
+                  const targetD = d + 1;
+                  const absVal = val + offset;
+                  if (myBot[targetD] === undefined || absVal > myBot[targetD]) {
+                      myBot[targetD] = absVal;
+                  }
+              });
+          });
+
+          return { top: myTop, bot: myBot };
       };
 
-      // Run layout for each root (handles disjoint trees if any)
-      roots.forEach(root => traverse(root, 0));
+      // 5. Run Layout
+      roots.forEach(root => layoutNode(root));
 
-      // 5. Generate Layout Objects
-      const computedNodes = Array.from(nodeMap.values());
+      // 6. Assign Absolute Coordinates (Pre-Order Traversal)
+      const finalNodes: any[] = [];
+      const propagateCoordinates = (node: any, currentX: number, currentY: number) => {
+          node.x = currentX;
+          node.y = currentY;
+          finalNodes.push(node);
+          
+          node.children.forEach((child: any) => {
+              propagateCoordinates(child, currentX + X_GAP, currentY + child.relY);
+          });
+      };
+
+      // Start at 0,0 (will be offset later)
+      roots.forEach(root => propagateCoordinates(root, 0, 0));
+
+      // 7. Apply Global Offsets & Edges
+      const INITIAL_OFFSET_X = 500;
+      const INITIAL_OFFSET_Y = 500;
+      
+      finalNodes.forEach(node => {
+          node.x += INITIAL_OFFSET_X;
+          node.y += INITIAL_OFFSET_Y;
+      });
+
       const computedEdges: any[] = [];
-
-      computedNodes.forEach(node => {
+      finalNodes.forEach(node => {
           if (node.parentId) {
               const parent = nodeMap.get(node.parentId);
               computedEdges.push({
@@ -172,46 +270,130 @@ const App: React.FC = () => {
                   targetY: node.y,
                   targetId: node.id,
                   sourceCategory: parent.category,
-                  targetCategory: node.category
+                  targetCategory: node.category,
+                  sourceId: parent.id
               });
           }
       });
 
-      // Calculate container bounds
-      const maxX = Math.max(...computedNodes.map(n => n.x));
-      const maxY = Math.max(...computedNodes.map(n => n.y));
+      const startNode = finalNodes.find(n => n.id === 'nus_start');
 
       return {
-          nodes: computedNodes,
+          nodes: finalNodes,
           edges: computedEdges,
-          containerWidth: maxX + 400, // Add padding for right side
-          containerHeight: maxY + 400 // Add padding for bottom
+          startNodePos: startNode ? { x: startNode.x, y: startNode.y } : { x: 0, y: 0 }
       };
 
-  }, []); // Only runs once as ACHIEVEMENTS is constant
+  }, []);
 
-  // --- Map Drag Handlers ---
+  // --- Center View Logic ---
+  const handleRecenter = () => {
+    if (mapContainerRef.current) {
+        const { clientWidth, clientHeight } = mapContainerRef.current;
+        
+        // We want the startNode to be at the center of the screen
+        // Screen Center = Pan + (NodePos * Scale)
+        // Pan = Screen Center - (NodePos * Scale)
+        
+        // Note: We add offsets for the node's visual center (approx 50px)
+        const nodeCenterX = startNodePos.x + 100;
+        const nodeCenterY = startNodePos.y + 100;
+
+        const newPanX = (clientWidth / 2) - (nodeCenterX * scale);
+        const newPanY = (clientHeight / 2) - (nodeCenterY * scale);
+        
+        setPan({ x: newPanX, y: newPanY });
+    }
+  };
+
+  // Initial Auto-Center
+  useEffect(() => {
+    // We delay slightly to ensure DOM is ready
+    const timer = setTimeout(() => {
+        if (user && !hasCenteredOnce && mapContainerRef.current) {
+            handleRecenter();
+            setHasCenteredOnce(true);
+        }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [user, hasCenteredOnce]);
+
+  // --- Zoom Logic ---
+  const handleZoom = (direction: 'in' | 'out') => {
+      const factor = direction === 'in' ? 1.2 : 0.8;
+      let newScale = scale * factor;
+      // Clamp scale
+      newScale = Math.max(0.2, Math.min(3, newScale));
+      
+      // Smart Zoom: Keep center of screen at center
+      if (mapContainerRef.current) {
+        const { clientWidth, clientHeight } = mapContainerRef.current;
+        
+        // Current Center in World Coords
+        // CenterX = (ScreenWidth/2 - PanX) / OldScale
+        const centerX = (clientWidth / 2 - pan.x) / scale;
+        const centerY = (clientHeight / 2 - pan.y) / scale;
+
+        // New Pan to keep that World Center at Screen Center
+        // NewPanX = ScreenWidth/2 - (CenterX * NewScale)
+        const newPanX = (clientWidth / 2) - (centerX * newScale);
+        const newPanY = (clientHeight / 2) - (centerY * newScale);
+
+        setScale(newScale);
+        setPan({ x: newPanX, y: newPanY });
+      } else {
+        setScale(newScale);
+      }
+  };
+
+  // --- Drag Handlers (Mouse) ---
   const handleMouseDown = (e: React.MouseEvent) => {
-      if (!mapContainerRef.current) return;
       setIsDragging(true);
-      setStartPan({ x: e.clientX, y: e.clientY });
-      setScrollStart({ 
-          left: mapContainerRef.current.scrollLeft, 
-          top: mapContainerRef.current.scrollTop 
-      });
+      setDragStart({ x: e.clientX, y: e.clientY });
+      setPanStart({ x: pan.x, y: pan.y });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-      if (!isDragging || !mapContainerRef.current) return;
+      if (!isDragging) return;
       e.preventDefault();
-      const dx = e.clientX - startPan.x;
-      const dy = e.clientY - startPan.y;
-      
-      mapContainerRef.current.scrollLeft = scrollStart.left - dx;
-      mapContainerRef.current.scrollTop = scrollStart.top - dy;
+      const dx = e.clientX - dragStart.x;
+      const dy = e.clientY - dragStart.y;
+      setPan({
+          x: panStart.x + dx,
+          y: panStart.y + dy
+      });
   };
 
   const handleMouseUp = () => {
+      setIsDragging(false);
+  };
+
+  // --- Drag Handlers (Touch) ---
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+        setIsDragging(true);
+        const touch = e.touches[0];
+        setDragStart({ x: touch.clientX, y: touch.clientY });
+        setPanStart({ x: pan.x, y: pan.y });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+     if (!isDragging) return;
+     // Prevent pull-to-refresh etc
+     
+     if (e.touches.length === 1) {
+         const touch = e.touches[0];
+         const dx = touch.clientX - dragStart.x;
+         const dy = touch.clientY - dragStart.y;
+         setPan({
+            x: panStart.x + dx,
+            y: panStart.y + dy
+         });
+     }
+  };
+
+  const handleTouchEnd = () => {
       setIsDragging(false);
   };
 
@@ -222,25 +404,47 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#252525] relative overflow-hidden">
+    <div className="h-screen w-screen flex flex-col bg-neutral-950 text-gray-100 relative overflow-hidden">
       
-      {/* Background Pattern */}
-      <div className="absolute inset-0 bg-stone opacity-20 pointer-events-none z-0"></div>
+      {/* Background with Dotted Glow */}
+      <div className="absolute inset-0 z-0 bg-neutral-950">
+        <DottedGlowBackground 
+           className="opacity-50"
+           gap={30}
+           radius={1.5}
+           colorDarkVar="#333"
+           glowColorDarkVar="#D4AF37" // Gold glow for NUS theme
+        />
+        {/* Radial Vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0a0a0a_100%)] pointer-events-none"></div>
+      </div>
 
       {/* Header */}
-      <header className="relative z-10 bg-mc-panel border-b-4 border-black p-4 flex justify-between items-center shadow-lg">
-        <div>
-            <h1 className="text-4xl text-[#373737] drop-shadow-md">NUS Achievements</h1>
-            <p className="text-[#555] text-lg mt-1 flex items-center gap-2">
-                <span className="text-mc-green animate-pulse">●</span> {tip}
-            </p>
+      <header className="relative z-20 bg-black/60 backdrop-blur-md border-b border-mc-gold/30 p-4 flex justify-between items-center shadow-lg">
+        <div className="flex items-center gap-4">
+            {/* Mobile Menu Toggle */}
+            <button 
+                onClick={() => setShowMobileStats(true)} 
+                className="lg:hidden text-mc-gold hover:text-white transition-colors"
+            >
+                <Menu size={28} />
+            </button>
+            
+            <div>
+                <h1 className="text-2xl md:text-4xl text-white drop-shadow-md tracking-wider flex items-center gap-2">
+                    <span className="text-mc-gold">❖</span> NUS ACHIEVEMENTS
+                </h1>
+                <p className="text-gray-400 text-sm md:text-lg mt-1 hidden md:flex items-center gap-2">
+                    <span className="text-mc-green animate-pulse">●</span> {tip}
+                </p>
+            </div>
         </div>
         <div className="flex gap-4">
              <div className="text-right hidden md:block">
-                 <p className="text-sm text-gray-600">Current Session</p>
-                 <p className="text-xl text-[#373737]">Year 1, Sem 1</p>
+                 <p className="text-xs text-mc-goldDim uppercase tracking-widest">Current Session</p>
+                 <p className="text-xl text-gray-200">Year 1, Sem 1</p>
              </div>
-             <MinecraftButton onClick={() => window.open('https://nus.edu.sg', '_blank')}>
+             <MinecraftButton onClick={() => window.open('https://nus.edu.sg', '_blank')} className="hidden sm:block">
                 NUS HOME
              </MinecraftButton>
         </div>
@@ -249,8 +453,8 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden relative z-10">
         
-        {/* Sidebar */}
-        <aside className="w-80 p-4 hidden lg:block z-20">
+        {/* Desktop Sidebar */}
+        <aside className="w-80 p-4 hidden lg:block z-20 h-full border-r border-white/5 bg-black/20">
            <StatsDashboard 
                 progress={progress} 
                 user={user} 
@@ -259,62 +463,96 @@ const App: React.FC = () => {
            />
         </aside>
 
+        {/* Mobile Sidebar (Drawer) */}
+        {showMobileStats && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowMobileStats(false)}></div>
+                <div className="absolute left-0 top-0 bottom-0 w-80 bg-neutral-900 border-r border-mc-gold p-4 animate-in slide-in-from-left duration-200 shadow-2xl overflow-y-auto">
+                    <div className="flex justify-end mb-2">
+                        <button onClick={() => setShowMobileStats(false)} className="text-gray-400 hover:text-white">
+                            <X size={24} />
+                        </button>
+                    </div>
+                    <StatsDashboard 
+                        progress={progress} 
+                        user={user} 
+                        onLogout={handleLogout} 
+                        onUpdateAvatar={handleAvatarUpdate}
+                    />
+                </div>
+            </div>
+        )}
+
         {/* Map Wrapper with Filters */}
-        <div className="relative flex-1 flex flex-col h-full bg-dirt bg-repeat">
+        <div className="relative flex-1 flex flex-col h-full overflow-hidden">
             
-            {/* Filter Overlay */}
-            <div className="absolute top-4 left-4 z-30 flex gap-2 flex-wrap pointer-events-auto pr-4 max-w-full">
-                <MinecraftButton 
-                    variant={filterCategory === 'ALL' ? 'green' : 'default'} 
-                    onClick={() => setFilterCategory('ALL')}
-                    className="text-sm px-3 py-1"
-                >
-                    ALL
-                </MinecraftButton>
-                {Object.values(Category).map(cat => (
+            {/* Filter Overlay - Scrollable horizontally on mobile */}
+            <div className="absolute top-4 left-0 w-full px-4 z-30 pointer-events-auto overflow-x-auto no-scrollbar">
+                <div className="flex gap-2 min-w-max pb-2">
                     <MinecraftButton 
-                        key={cat} 
-                        variant={filterCategory === cat ? 'green' : 'default'} 
-                        onClick={() => setFilterCategory(cat)}
-                        className="text-sm px-3 py-1"
+                        variant={filterCategory === 'ALL' ? 'green' : 'default'} 
+                        onClick={() => setFilterCategory('ALL')}
+                        className="text-xs sm:text-sm px-3 py-1"
                     >
-                        {cat.toUpperCase()}
+                        ALL
                     </MinecraftButton>
-                ))}
+                    {Object.values(Category).map(cat => (
+                        <MinecraftButton 
+                            key={cat} 
+                            variant={filterCategory === cat ? 'green' : 'default'} 
+                            onClick={() => setFilterCategory(cat)}
+                            className="text-xs sm:text-sm px-3 py-1"
+                        >
+                            {cat.toUpperCase()}
+                        </MinecraftButton>
+                    ))}
+                </div>
             </div>
 
             {/* Canvas (Tree Visualization) */}
             <main 
                 ref={mapContainerRef}
-                className={`flex-1 overflow-auto bg-black/20 relative shadow-[inset_0_0_20px_rgba(0,0,0,0.8)] ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                className={`flex-1 w-full h-full relative overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} touch-none`}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
             >
+                {/* 
+                    INFINITE CANVAS CONTAINER 
+                    We use CSS transform to move the world.
+                */}
                 <div 
-                    className="origin-top-left relative" 
+                    className="absolute top-0 left-0 origin-top-left transition-transform duration-75 ease-out will-change-transform"
                     style={{ 
-                        transform: `scale(${scale})`,
-                        width: containerWidth,
-                        height: containerHeight,
-                        padding: '80px' // Initial offset
+                        transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
                     }}
                 >
+                    
                     {/* 1. Connections Layer (SVG) */}
-                    <svg className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-visible">
+                    <svg 
+                        className="absolute overflow-visible pointer-events-none"
+                        style={{ top: 0, left: 0, width: 1, height: 1 }}
+                    >
                         {edges.map(edge => {
-                            // Filter Logic: Show edge if ALL is selected, OR if both source and target match the category
-                            // For tree structures, filtering usually disconnects branches if parents are hidden.
                             if (filterCategory !== 'ALL' && (edge.sourceCategory !== filterCategory || edge.targetCategory !== filterCategory)) {
                                 return null;
                             }
 
-                            const ICON_OFFSET = 40; // Half of 80px icon size
-                            const startX = edge.sourceX + 80 + 80; // Node X + Icon Width + padding
-                            const startY = edge.sourceY + ICON_OFFSET + 80; // Node Y + Icon Center + padding
-                            const endX = edge.targetX + 80; // Node X + padding
-                            const endY = edge.targetY + ICON_OFFSET + 80; // Node Y + Icon Center + padding
+                            const isSourceUnlocked = progress.unlockedIds.includes(edge.sourceId);
+                            const isTargetUnlocked = progress.unlockedIds.includes(edge.targetId);
+                            const isPathActive = isSourceUnlocked && isTargetUnlocked;
+                            // Show path if parent is unlocked (even if target is not), but dim it
+                            const isPathVisible = isSourceUnlocked; 
+
+                            const ICON_OFFSET = 40; 
+                            const startX = edge.sourceX + 100 + 80; 
+                            const startY = edge.sourceY + ICON_OFFSET + 100; 
+                            const endX = edge.targetX + 100; 
+                            const endY = edge.targetY + ICON_OFFSET + 100; 
                             
                             // Stepped Path (Manhattan)
                             const midX = (startX + endX) / 2;
@@ -324,10 +562,12 @@ const App: React.FC = () => {
                                 <path 
                                     key={edge.id}
                                     d={pathData}
-                                    stroke="#373737"
-                                    strokeWidth="4"
+                                    stroke={isPathActive ? "#D4AF37" : (isPathVisible ? "#404040" : "#222")} 
+                                    strokeWidth={isPathActive ? "6" : "3"}
                                     fill="none"
-                                    shapeRendering="crispEdges"
+                                    strokeDasharray={isPathActive ? "none" : "10,5"}
+                                    shapeRendering="geometricPrecision"
+                                    className={`transition-all duration-500 ${isPathActive ? 'drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] opacity-100' : (isPathVisible ? 'opacity-30' : 'opacity-10')}`}
                                 />
                             );
                         })}
@@ -335,44 +575,51 @@ const App: React.FC = () => {
 
                     {/* 2. Nodes Layer */}
                     {nodes.map(node => {
-                        // Filter Logic
                         if (filterCategory !== 'ALL' && node.category !== filterCategory) {
                             return null;
                         }
 
                         const isUnlocked = progress.unlockedIds.includes(node.id);
                         const isParentUnlocked = node.parentId ? progress.unlockedIds.includes(node.parentId) : true;
-                        // Determine visibility logic:
-                        // If filtered, we show the node regardless of parent status? 
-                        // Or do we still respect "Fog of War"? 
-                        // Usually Fog of War respects the logic of "can I reach this?". 
-                        // If we filter, we might see isolated nodes. 
-                        // Let's keep the "canSee" logic based on unlocks, regardless of filter visibility of parent.
-                        const canSee = isUnlocked || isParentUnlocked;
+                        
+                        // VISIBILITY LOGIC:
+                        // 1. Unlocked: Full opacity, color.
+                        // 2. Parent Unlocked (Ready): Slightly dim, grayscale.
+                        // 3. Parent Locked (Future): Very dim, grayscale, blur.
+                        
+                        let opacityClass = 'opacity-100';
+                        if (!isUnlocked) {
+                             if (isParentUnlocked) {
+                                 opacityClass = 'opacity-80 grayscale';
+                             } else {
+                                 opacityClass = 'opacity-30 grayscale blur-[1px]';
+                             }
+                        }
 
                         return (
                             <div 
                                 key={node.id} 
                                 className="absolute group"
                                 style={{ 
-                                    left: node.x + 80, // + Padding 
-                                    top: node.y + 80   // + Padding
+                                    left: `${node.x + 100}px`, 
+                                    top: `${node.y + 100}px` 
                                 }}
                             >
                                 <div 
-                                    className={`transition-all duration-200 ${canSee ? 'opacity-100 cursor-pointer' : 'opacity-50 grayscale cursor-not-allowed'}`}
+                                    className={`transition-all duration-200 cursor-pointer hover:scale-110 ${opacityClass}`}
                                     onClick={(e) => {
-                                        e.stopPropagation(); // Prevent drag start when clicking an achievement
-                                        if(canSee) setSelectedAchievement(node);
+                                        e.stopPropagation(); 
+                                        setSelectedAchievement(node);
                                     }}
                                 >
                                     <AchievementIcon 
                                         iconName={node.iconName} 
                                         type={node.type} 
+                                        category={node.category}
                                         unlocked={isUnlocked} 
                                         size={32}
                                     />
-                                    <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/70 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 border border-white font-pixel">
+                                    <div className="absolute -bottom-10 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/90 backdrop-blur text-mc-gold px-3 py-1 rounded-md text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 border border-mc-gold/50 font-pixel tracking-wide shadow-[0_0_10px_rgba(0,0,0,1)]">
                                         {node.title}
                                     </div>
                                 </div>
@@ -381,10 +628,24 @@ const App: React.FC = () => {
                     })}
                 </div>
 
-                {/* Zoom Controls */}
-                <div className="absolute bottom-8 right-8 flex gap-2 z-30 pointer-events-auto">
-                    <MinecraftButton onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="w-10 h-10 flex items-center justify-center">-</MinecraftButton>
-                    <MinecraftButton onClick={() => setScale(s => Math.min(1.5, s + 0.1))} className="w-10 h-10 flex items-center justify-center">+</MinecraftButton>
+                {/* Controls (Zoom & Center) */}
+                <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-30 pointer-events-auto items-end">
+                    <MinecraftButton 
+                        onClick={handleRecenter} 
+                        className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20 mb-4"
+                        title="Recenter Map"
+                    >
+                        <Compass size={24} />
+                    </MinecraftButton>
+                    
+                    <div className="flex gap-2">
+                        <MinecraftButton onClick={() => handleZoom('out')} className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20">
+                            <Minus size={20} />
+                        </MinecraftButton>
+                        <MinecraftButton onClick={() => handleZoom('in')} className="w-12 h-12 flex items-center justify-center text-xl bg-black/80 !border-mc-gold hover:!bg-mc-gold/20">
+                            <Plus size={20} />
+                        </MinecraftButton>
+                    </div>
                 </div>
             </main>
         </div>
@@ -396,8 +657,12 @@ const App: React.FC = () => {
         <AchievementModal 
             achievement={selectedAchievement} 
             onClose={() => setSelectedAchievement(null)} 
-            unlocked={progress.unlockedIds.includes(selectedAchievement.id)}
+            status={
+                progress.unlockedIds.includes(selectedAchievement.id) ? 'UNLOCKED' : 
+                (!selectedAchievement.parentId || progress.unlockedIds.includes(selectedAchievement.parentId)) ? 'READY' : 'LOCKED'
+            }
             onUnlock={handleUnlock}
+            parentTitle={selectedAchievement.parentId ? ACHIEVEMENTS.find(a => a.id === selectedAchievement.parentId)?.title : undefined}
         />
       )}
     </div>
